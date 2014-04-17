@@ -12,6 +12,8 @@ template<class T>
 class Updateable : Living {
 public:
 	virtual void update(T*) = 0;
+
+	virtual ~Updateable() = 0;
 };
 
 #endif /* UPDATEABLE_H_ */

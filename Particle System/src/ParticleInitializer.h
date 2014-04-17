@@ -12,6 +12,8 @@ template<class T>
 class ParticleInitializer {
 public:
 	virtual void initParticle(T*) = 0;
+
+	virtual ~ParticleInitializer() = 0;
 };
 
 #endif /* PARTICLEINITIALIZER_H_ */

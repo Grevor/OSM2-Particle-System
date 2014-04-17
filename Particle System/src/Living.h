@@ -11,6 +11,8 @@
 class Living {
 public:
 	virtual bool isAlive() = 0;
+
+	virtual ~Living() = 0;
 };
 
 #endif /* LIVING_H_ */

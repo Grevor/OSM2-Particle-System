@@ -9,9 +9,11 @@
 #define PARTICLEPOOL_H_
 
 template<class T>
-class ParticlePool {
+class ParticlePool : ReadableParticlePool<T> {
 public:
 	virtual ParticleIterator<T> getAllocationIterator() = 0;
+
+	virtual ~ParticlePool() = 0;
 };
 
 #endif /* PARTICLEPOOL_H_ */

@@ -12,6 +12,8 @@ template<class T>
 class ParticleUpdater {
 public:
 	virtual bool updateParticle(T*) = 0;
+
+	virtual ~ParticleUpdater() = 0;
 };
 
 #endif /* PARTICLEUPDATER_H_ */
