@@ -10,7 +10,8 @@
 
 template<class T>
 class Updateable : Living {
-	virtual void update(T);
+public:
+	virtual void update(T*) = 0;
 };
 
 #endif /* UPDATEABLE_H_ */

@@ -24,4 +24,10 @@
 		<nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
 	</natures>
+	<variableList>
+		<variable>
+			<name>BOOST_LOC</name>
+			<value>file:/C:/Program%20Files/boost/boost_1_55_0</value>
+		</variable>
+	</variableList>
 </projectDescription>

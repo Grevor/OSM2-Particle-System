@@ -10,7 +10,8 @@
 
 template<class T>
 class ParticlePool {
-	virtual ParticleIterator<T> getAllocationIterator();
+public:
+	virtual ParticleIterator<T> getAllocationIterator() = 0;
 };
 
 #endif /* PARTICLEPOOL_H_ */

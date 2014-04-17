@@ -10,7 +10,7 @@
 
 class Living {
 public:
-	virtual bool isAlive();
+	virtual bool isAlive() = 0;
 };
 
 #endif /* LIVING_H_ */
