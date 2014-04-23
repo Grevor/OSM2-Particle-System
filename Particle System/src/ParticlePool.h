@@ -8,7 +8,7 @@
 #ifndef PARTICLEPOOL_H_
 #define PARTICLEPOOL_H_
 
-template<class T>
+template<typename T>
 class ParticlePool : ReadableParticlePool<T> {
 public:
 	virtual ParticleIterator<T> getAllocationIterator() = 0;

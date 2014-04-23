@@ -8,7 +8,7 @@
 #ifndef PARTICLEUPDATER_H_
 #define PARTICLEUPDATER_H_
 
-template<class T>
+template<typename T>
 class ParticleUpdater {
 public:
 	virtual bool updateParticle(T*) = 0;

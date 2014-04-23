@@ -8,10 +8,10 @@
 #ifndef UPDATEABLE_H_
 #define UPDATEABLE_H_
 
-template<class T>
+template<typename T>
 class Updateable : Living {
 public:
-	virtual void update(T*) = 0;
+	virtual void update(T) = 0;
 
 	virtual ~Updateable() = 0;
 };

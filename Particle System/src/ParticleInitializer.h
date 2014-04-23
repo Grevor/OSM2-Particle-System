@@ -8,10 +8,15 @@
 #ifndef PARTICLEINITIALIZER_H_
 #define PARTICLEINITIALIZER_H_
 
-template<class T>
+template<typename Particle>
 class ParticleInitializer {
 public:
-	virtual void initParticle(T*) = 0;
+	/**
+	 * Initialises a particle at the given memory location
+	 * @param dst is a pointer to the preallocated memory where the
+	 * new particle will be stored.
+	 */
+	virtual void initParticle(Particle* dst) = 0;
 
 	virtual ~ParticleInitializer() = 0;
 };
