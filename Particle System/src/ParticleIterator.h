@@ -9,6 +9,10 @@
 #ifndef PARTICLEITERATOR_H_
 #define PARTICLEITERATOR_H_
 
+/**
+ * Interface to an iterator which iterates over
+ * pointers to allocated particles of a specified type.
+ */
 template<typename T>
 class ParticleIterator {
 public:

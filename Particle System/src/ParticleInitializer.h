@@ -8,6 +8,9 @@
 #ifndef PARTICLEINITIALIZER_H_
 #define PARTICLEINITIALIZER_H_
 
+/**
+ * Interface describing an object which can initialize particles of a specified type.
+ */
 template<typename Particle>
 class ParticleInitializer {
 public:

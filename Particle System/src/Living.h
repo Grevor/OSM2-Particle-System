@@ -8,6 +8,9 @@
 #ifndef LIVING_H_
 #define LIVING_H_
 
+/**
+ * Interface describing an object which is alive in some sense.
+ */
 class Living {
 public:
 	/**

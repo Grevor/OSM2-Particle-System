@@ -8,6 +8,9 @@
 #ifndef PARTICLESYSTEM_H_
 #define PARTICLESYSTEM_H_
 
+/**
+ * Class representing a particle system which can be updated concurrently.
+ */
 template<typename Particle, typename UpdateData>
 class ParticleSystem: Updateable<UpdateData> {
 public:
@@ -34,7 +37,7 @@ public:
 	 * @return true if looping, else false
 	 */
 	bool isLooping();
-	bool isAlive() override;
+	virtual bool isAlive() override;
 };
 
 #endif /* PARTICLESYSTEM_H_ */

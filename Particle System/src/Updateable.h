@@ -8,10 +8,17 @@
 #ifndef UPDATEABLE_H_
 #define UPDATEABLE_H_
 
-template<typename T>
+/**
+ * Interface describing an object which can be updated.
+ */
+template<typename UpdateData>
 class Updateable : Living {
 public:
-	virtual void update(T) = 0;
+	/**
+	 * Updates this object.
+	 * @param data Data used to update object.
+	 */
+	virtual void update(UpdateData data) = 0;
 
 	virtual ~Updateable() = 0;
 };

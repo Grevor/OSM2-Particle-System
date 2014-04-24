@@ -8,10 +8,19 @@
 #ifndef PARTICLEUPDATER_H_
 #define PARTICLEUPDATER_H_
 
-template<typename T>
+/**
+ * Interface describing an object which can update a particle of a specified type.
+ */
+template<typename Particle>
 class ParticleUpdater {
 public:
-	virtual bool updateParticle(T*) = 0;
+	/**
+	 * Updates the given particle. The general contract is that this function may take any action.
+	 * @param particle Pointer to the particle to update.
+	 * @return
+	 * True if the given particle is considered dead, else false.
+	 */
+	virtual bool updateParticle(Particle* particle) = 0;
 
 	virtual ~ParticleUpdater() = 0;
 };
