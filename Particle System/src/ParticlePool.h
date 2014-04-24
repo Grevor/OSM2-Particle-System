@@ -28,6 +28,13 @@ public:
 	 */
 	virtual void returnParticle(Particle* p);
 
+	/**
+	 * Resets the particle-pool, releasing all particles contained within it.
+	 * After this function is called, all pointers to any particle in the pool
+	 * must be considered invalid.
+	 */
+	virtual void reset() = 0;
+
 	virtual ~ParticlePool() = 0;
 };
 
