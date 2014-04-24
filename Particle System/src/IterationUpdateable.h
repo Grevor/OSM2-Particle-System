@@ -11,7 +11,6 @@
 /**
  * Interface describing an object which can be updated.
  */
-template<typename UpdateData>
 class IterationUpdateable : Living {
 public:
 
@@ -27,7 +26,7 @@ public:
 	 * Updates this object.
 	 * @param data Data used to update object.
 	 */
-	virtual void update(UpdateData data) = 0;
+	virtual void update() = 0;
 
 	virtual ~IterationUpdateable() = 0;
 };
