@@ -12,15 +12,24 @@
  * Interface describing an object which can be updated.
  */
 template<typename UpdateData>
-class Updateable : Living {
+class IterationUpdateable : Living {
 public:
+
+	/**
+	 * Steps this object, making it progress to its next iteration if all
+	 * updating from the previous frame has been completed.
+	 *
+	 * If the update is not complete, an error may be thrown.
+	 */
+	virtual void step() = 0;
+
 	/**
 	 * Updates this object.
 	 * @param data Data used to update object.
 	 */
 	virtual void update(UpdateData data) = 0;
 
-	virtual ~Updateable() = 0;
+	virtual ~IterationUpdateable() = 0;
 };
 
 #endif /* UPDATEABLE_H_ */

@@ -32,6 +32,12 @@ public:
 	 */
 	virtual T* operator++() = 0;
 
+	/**
+	 * Tells the iterator that the last time-step was completed,
+	 * and a new one is in-bound.
+	 */
+	virtual void stepComplete() = 0;
+
 	virtual ~ParticleIterator() = 0;
 };
 

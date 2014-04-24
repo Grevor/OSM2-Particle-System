@@ -12,7 +12,7 @@
  * Interface describing a particle pool which can be
  */
 template<typename Particle>
-class ParticlePool : ReadableParticlePool<Particle> {
+class ParticlePool : public ReadableParticlePool<Particle> {
 public:
 	/**
 	 * Gets an iterator which can be queried for particle allocations.
