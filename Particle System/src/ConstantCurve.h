@@ -4,7 +4,6 @@
  *  Created on: 25 apr 2014
  *      Author: Elin
  */
-
 #ifndef CONSTANTCURVE_H_
 #define CONSTANTCURVE_H_
 namespace Curve {
