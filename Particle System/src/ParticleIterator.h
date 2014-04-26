@@ -38,6 +38,12 @@ public:
 	 */
 	virtual void stepComplete() = 0;
 
+	/**
+	 * Tell the iterator that the user is done with the particle.
+	 * @param particle the particle.
+	 */
+	virtual void done(T* particle) = 0;
+
 	virtual ~ParticleIterator() = 0;
 };
 

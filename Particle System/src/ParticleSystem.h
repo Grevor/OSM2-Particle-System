@@ -15,7 +15,7 @@
 
 using namespace Curves;
 
-#define PARTICLE_SYSTEM_WORK_PER_THREAD_STATIC 300
+#define PARTICLE_SYSTEM_WORK_PER_THREAD_STATIC 0x7fffffff
 
 /**
  * Class representing a particle system which can be updated concurrently.
@@ -25,11 +25,20 @@ class ParticleSystem : IterationUpdateable {
 public:
 	ParticleSystem(ParticlePool<Particle>* pool, ParticleInitializer<Particle>* init,
 			ParticleUpdater<Particle>* updater, Curve<long,long>* spawnCurve, bool looping) {
+		assert(pool != NULL);
+		assert(init != NULL);
+		assert(updater != NULL);
+		assert(spawnCurve != NULL);
+
 		this->pool = pool;
 		this->initializer = init;
 		this->updater = updater;
 		this->spawnCurve = spawnCurve;
 		this->loopingSystem = looping;
+		this->allocationIterator = NULL;
+		this->updateIterator = NULL;
+		this->alive = true;
+		this->currentStep = 0;
 		this->reset();
 	}
 
@@ -46,6 +55,7 @@ public:
 		this->newParticlesLeftToSpawn = 0;
 		if(allocationIterator != NULL) delete allocationIterator;
 		if(updateIterator != NULL) delete updateIterator;
+		pool->reset();
 		allocationIterator = pool->getAllocationIterator();
 		updateIterator = pool->getLivingIterator();
 	}
@@ -64,6 +74,7 @@ public:
 			this->newParticlesLeftToSpawn = spawnCurve->getValue(currentStep);
 			updateIterator->stepComplete();
 			allocationIterator->stepComplete();
+			pool->stepComplete();
 		}
 	}
 
@@ -143,6 +154,7 @@ private:
 
 			initializer->initParticle(allocatedMemory);
 			maxParticles--;
+			allocationIterator->done(allocatedMemory);
 		}
 		return maxParticles;
 	}
@@ -177,6 +189,8 @@ private:
 			if (particleToUpdate != NULL) {
 				if (updater->updateParticle(particleToUpdate)) {
 					pool->returnParticle(particleToUpdate);
+				} else {
+					updateIterator->done(particleToUpdate);
 				}
 			}
 		}
