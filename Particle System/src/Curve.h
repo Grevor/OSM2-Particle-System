@@ -11,7 +11,7 @@
 namespace Curves {
 
 template<typename Domain, typename Range>
-virtual class Curve {
+class Curve {
 public:
 	/**
 	 * Gets the value of this curve at the specified point.

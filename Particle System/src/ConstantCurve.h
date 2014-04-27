@@ -6,8 +6,11 @@
  */
 #ifndef CONSTANTCURVE_H_
 #define CONSTANTCURVE_H_
+
+#include "Curve.h"
+
 namespace Curve {
-class ConstantCurve : virtual Curve<long,long>
+class ConstantCurve : Curve<long,long>
 {
 private:
 	long value;
@@ -17,7 +20,7 @@ public:
 		return this->value;
 	}
 
-	ConstantCurve(long val){
+	ConstantCurve(long val) : Curve<long,long>(){
 		value = val;
 	}
 };

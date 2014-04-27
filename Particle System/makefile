@@ -15,6 +15,7 @@ demo: $(OBJ)
 depend: $(SOURCE)
 	$(RM_COMMAND) ./depend
 	$(COMPILER) $(FLAGS) -MM $^>>./depend
+	echo rebuilt dependencies
 	
 #Forces a dependency build, and invokes the real build afterward with the newly-built dependencies.	
 $(OBJ_FOLDER)/%.o: $(SRC_FOLDER)/%.cpp
