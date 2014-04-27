@@ -14,10 +14,12 @@
 #include <boost/thread/thread.hpp>
 
 #include <IterationUpdateable.h>
+#include <WorkPool.h>
 
 class ParticleEngine : IterationUpdateable<void> {
 	std::list<IterationUpdateable*> particleSystems;
-	boost::asio::io_service ioService;
+	//boost::asio::io_service ioService;
+	WorkPool* workPool;
 	boost::thread_group threadpool;
 public:
 	ParticleEngine();
