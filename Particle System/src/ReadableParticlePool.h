@@ -22,9 +22,9 @@ public:
 	 * @return
 	 * The iterator.
 	 */
-	virtual ParticleIterator<T> getLivingIterator() = 0;
+	virtual ParticleIterator<T>* getLivingIterator() = 0;
 
-	virtual ~ReadableParticlePool() = 0;
+	virtual ~ReadableParticlePool() {}
 };
 
 

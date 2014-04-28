@@ -21,7 +21,7 @@ public:
 	 */
 	virtual void initParticle(Particle* dst) = 0;
 
-	virtual ~ParticleInitializer() = 0;
+	virtual ~ParticleInitializer() {}
 };
 
 #endif /* PARTICLEINITIALIZER_H_ */

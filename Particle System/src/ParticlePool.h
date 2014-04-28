@@ -8,6 +8,7 @@
 #ifndef PARTICLEPOOL_H_
 #define PARTICLEPOOL_H_
 
+#include "ReadableParticlePool.h"
 /**
  * Interface describing a particle pool which can be
  */
@@ -19,21 +20,21 @@ public:
 	 * @return
 	 * The iterator.
 	 */
-	virtual ParticleIterator<Particle> getAllocationIterator() = 0;
+	virtual ParticleIterator<Particle>* getAllocationIterator() = 0;
 
 	/**
 	 * Gets an iterator to all non-updated particles in this particle pool.
 	 * @return
 	 * The iterator.
 	 */
-	virtual ParticleIterator<Particle> getUpdateIterator() = 0;
+	virtual ParticleIterator<Particle>* getUpdateIterator() = 0;
 
 	/**
 	 * Returns the specified particle to the pool.
 	 * @param p The particle to return to the pool.
 	 * After this action is done, any pointer to the particle may not be used.
 	 */
-	virtual void returnParticle(Particle* p);
+	virtual void returnParticle(Particle* p) = 0;
 
 	/**
 	 * Resets the particle-pool, releasing all particles contained within it.
@@ -48,7 +49,7 @@ public:
 	 */
 	virtual void stepComplete() = 0;
 
-	virtual ~ParticlePool() = 0;
+	virtual ~ParticlePool() {}
 };
 
 #endif /* PARTICLEPOOL_H_ */

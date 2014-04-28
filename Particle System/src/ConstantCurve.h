@@ -9,8 +9,8 @@
 
 #include "Curve.h"
 
-namespace Curve {
-class ConstantCurve : Curve<long,long>
+namespace Curves {
+class ConstantCurve : public Curve<long,long>
 {
 private:
 	long value;

@@ -9,11 +9,19 @@
 #define PARTICLESYSTEM_H_
 
 #include "Curve.h"
+#include "IterationUpdateable.h"
+#include "ParticleInitializer.h"
+#include "ParticleIterator.h"
+#include "ParticlePool.h"
+#include "ReadableParticlePool.h"
+#include "ParticleUpdater.h"
 #include <stdlib.h>
 #include <boost/atomic/atomic.hpp>
 #include <assert.h>
+#include <atomic>
 
 using namespace Curves;
+using namespace std;
 
 #define PARTICLE_SYSTEM_WORK_PER_THREAD_STATIC 0x7fffffff
 
@@ -22,6 +30,16 @@ using namespace Curves;
  */
 template<typename Particle>
 class ParticleSystem : IterationUpdateable {
+	ParticlePool<Particle>* pool;
+	ParticleUpdater<Particle>* updater;
+	ParticleInitializer<Particle>* initializer;
+	ParticleIterator<Particle>* allocationIterator, *updateIterator;
+	long currentStep;
+	//boost::atomic_int_fast64_t
+	atomic<int64_t> newParticlesLeftToSpawn;
+	Curve<long,long>* spawnCurve;
+	bool loopingSystem, alive;
+
 public:
 	ParticleSystem(ParticlePool<Particle>* pool, ParticleInitializer<Particle>* init,
 			ParticleUpdater<Particle>* updater, Curve<long,long>* spawnCurve, bool looping) {
@@ -57,7 +75,7 @@ public:
 		if(updateIterator != NULL) delete updateIterator;
 		pool->reset();
 		allocationIterator = pool->getAllocationIterator();
-		updateIterator = pool->getLivingIterator();
+		updateIterator = pool->getUpdateIterator();
 	}
 
 	/**
@@ -86,7 +104,7 @@ public:
 		if(updateDone() || !isAlive()) return;
 		long updateStep = currentStep;
 		long workunitsAllowed = PARTICLE_SYSTEM_WORK_PER_THREAD_STATIC;
-		this->createNewParticles(workunitsAllowed);
+		workunitsAllowed = this->createNewParticles(workunitsAllowed);
 		updateParticles(updateStep, workunitsAllowed);
 	}
 
@@ -112,6 +130,14 @@ public:
 		return !hasParticlesToSpawn() && updateIterator->hasNext();
 	}
 
+	/**
+	 * Gets the living particles of a particle-system.
+	 * @return
+	 */
+	ParticleIterator<Particle>* getLivingParticles() {
+		return pool->getLivingIterator();
+	}
+
 private:
 
 	/**
@@ -131,10 +157,10 @@ private:
 	 */
 	inline bool aquireParticleToAllocate() {
 		while(true) {
-			long expected = newParticlesLeftToSpawn;
+			int64_t expected = newParticlesLeftToSpawn;
 			if(expected <= 0) return false;
-			long desired = expected - 1;
-			if(newParticlesLeftToSpawn.compare_exchange_strong(&expected, desired)) return true;
+			int64_t desired = expected - 1;
+			if(std::atomic_compare_exchange_strong(&this->newParticlesLeftToSpawn, &expected, desired)) return true;
 		}
 		return false;
 	}
@@ -196,14 +222,7 @@ private:
 		}
 	}
 
-	ParticlePool<Particle>* pool;
-	ParticleUpdater<Particle>* updater;
-	ParticleInitializer<Particle>* initializer;
-	ParticleIterator<Particle>* allocationIterator, *updateIterator;
-	long currentStep;
-	boost::atomic_int_fast64_t newParticlesLeftToSpawn;
-	Curve<long,long>* spawnCurve;
-	bool loopingSystem, alive;
+
 };
 
 #endif /* PARTICLESYSTEM_H_ */

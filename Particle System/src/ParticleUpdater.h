@@ -22,7 +22,7 @@ public:
 	 */
 	virtual bool updateParticle(Particle* particle) = 0;
 
-	virtual ~ParticleUpdater() = 0;
+	virtual ~ParticleUpdater() {}
 };
 
 #endif /* PARTICLEUPDATER_H_ */

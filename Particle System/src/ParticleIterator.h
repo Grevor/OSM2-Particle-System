@@ -44,7 +44,7 @@ public:
 	 */
 	virtual void done(T* particle) = 0;
 
-	virtual ~ParticleIterator() = 0;
+	virtual ~ParticleIterator() {}
 };
 
 #endif /* PARTICLEITERATOR_H_ */

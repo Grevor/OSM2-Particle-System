@@ -7,7 +7,7 @@
 
 #ifndef UPDATEABLE_H_
 #define UPDATEABLE_H_
-
+#include "Living.h"
 /**
  * Interface describing an object which can be updated.
  */
@@ -28,7 +28,7 @@ public:
 	 */
 	virtual void update() = 0;
 
-	virtual ~IterationUpdateable() = 0;
+	virtual ~IterationUpdateable() {}
 };
 
 #endif /* UPDATEABLE_H_ */

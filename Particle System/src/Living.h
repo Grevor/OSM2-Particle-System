@@ -19,7 +19,7 @@ public:
 	 */
 	virtual bool isAlive() = 0;
 
-	virtual ~Living() = 0;
+	virtual ~Living() {};
 };
 
 #endif /* LIVING_H_ */

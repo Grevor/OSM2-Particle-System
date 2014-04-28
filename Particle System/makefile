@@ -4,7 +4,7 @@ SOURCES_FULL=$(addprefix $(SRC_FOLDER)/, $(SOURCES))
 OBJ=$(addprefix $(OBJ_FOLDER)/, $(patsubst %.cpp, %.o, $(SOURCES)))
 DEP=$(addprefix $(OBJ_FOLDER)/, $(patsubst %.cpp, %.d, $(SOURCES)))
 RM_COMMAND=rm -f
-FLAGS=-ggdb -Wall
+FLAGS=-ggdb -Wall -std=c++11
 OBJ_FOLDER=obj
 SRC_FOLDER=src
 MKDIR_COMMAND= mkdir -p
