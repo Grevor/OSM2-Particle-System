@@ -9,7 +9,7 @@ OBJ_FOLDER=obj
 SRC_FOLDER=src
 MKDIR_COMMAND= mkdir -p
 
-demo: $(OBJ)
+demo: depend $(OBJ)
 	$(COMPILER) $(FLAGS) $(SRC_FOLDER)/demo.cpp -o "demo.exe" 
 
 depend: $(SOURCE)

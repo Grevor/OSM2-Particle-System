@@ -83,16 +83,15 @@ public:
 	 * updating from the previous frame has been completed.
 	 */
 	void step() override {
-		if(!hasValidIterators()) {
-			updateIterator = pool->getLivingIterator();
-			allocationIterator = pool->getAllocationIterator();
-		}
-		if(isDoneWithIteration(currentStep)) {
-			this->currentStep++;
-			this->newParticlesLeftToSpawn = spawnCurve->getValue(currentStep);
-			updateIterator->stepComplete();
-			allocationIterator->stepComplete();
-			pool->stepComplete();
+		while(true) {
+			if(isDoneWithIteration(currentStep)) {
+				this->currentStep++;
+				this->newParticlesLeftToSpawn = spawnCurve->getValue(currentStep);
+				updateIterator->stepComplete();
+				allocationIterator->stepComplete();
+				pool->stepComplete();
+				return;
+			}
 		}
 	}
 
@@ -127,7 +126,7 @@ public:
 	 * True if it is, else false.
 	 */
 	bool updateDone() {
-		return !hasParticlesToSpawn() && updateIterator->hasNext();
+		return !hasParticlesToSpawn() && !updateIterator->hasNext();
 	}
 
 	/**
@@ -158,7 +157,8 @@ private:
 	inline bool aquireParticleToAllocate() {
 		while(true) {
 			int64_t expected = newParticlesLeftToSpawn;
-			if(expected <= 0) return false;
+			if(expected <= 0)
+				return false;
 			int64_t desired = expected - 1;
 			if(std::atomic_compare_exchange_strong(&this->newParticlesLeftToSpawn, &expected, desired)) return true;
 		}
@@ -176,7 +176,10 @@ private:
 	inline long createNewParticles(long maxParticles) {
 		while(maxParticles > 0 && aquireParticleToAllocate()) {
 			Particle* allocatedMemory = allocationIterator->next();
-			if(allocatedMemory == NULL) return maxParticles; //TODO maybe throw errors, as the allocator could not find memory for us?
+			if(allocatedMemory == NULL) {
+				this->newParticlesLeftToSpawn = 0;
+				return maxParticles; //TODO maybe throw errors, as the allocator could not find memory for us?
+			}
 
 			initializer->initParticle(allocatedMemory);
 			maxParticles--;
@@ -192,7 +195,7 @@ private:
 	 * True if the specified iteration is done, else false.
 	 */
 	inline bool isDoneWithIteration(long step) {
-		return step != currentStep || (!hasParticlesToSpawn() && !updateIterator->hasNext());
+		return !hasParticlesToSpawn() && !updateIterator->hasNext();
 	}
 
 	/**
@@ -219,6 +222,7 @@ private:
 					updateIterator->done(particleToUpdate);
 				}
 			}
+			//return;
 		}
 	}
 

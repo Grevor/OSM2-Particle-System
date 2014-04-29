@@ -17,11 +17,12 @@
  * Increments value by 1.
  */
 class SimpleParticleUpdater : public ParticleUpdater<struct simpleParticle> {
+	int maxVal;
 public:
-	SimpleParticleUpdater() {}
+	SimpleParticleUpdater(int max) { maxVal = max; }
 
 	bool updateParticle(struct simpleParticle* particle) override {
-		if(particle->value >= PARTICLE_MAX_VAL) return true;
+		if(particle->value >= maxVal) return true;
 
 		particle->value++;
 		return false;

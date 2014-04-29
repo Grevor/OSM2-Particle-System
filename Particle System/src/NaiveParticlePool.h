@@ -45,6 +45,7 @@ public:
 		updated = NULL;
 		done = NULL;
 		living = NULL;
+		iteratorCreationHalted = false;
 		//livingIteratorCreationMutex(); //Initialize mutex.
 		numLivingIterator = 0;
 		for(int i = 0; i < poolSize; i++){
@@ -123,7 +124,7 @@ public:
 			}
 
 			bool hasNext() override {
-				return *StackIterator::stack != NULL && *updatePool != NULL;
+				return *updatePool != NULL || *StackIterator::stack != NULL;
 			}
 
 			Particle* next() override {
@@ -157,13 +158,14 @@ public:
 
 	ParticleIterator<Particle>* getLivingIterator() {
 		this->affectNumLivingIterators(1);
-		return new LivingIterator(&this->updated, &this->done, &this->updated, this);
+		return new LivingIterator(&this->updated, &this->done, &this->living, this);
 	}
 
 	void returnParticle(Particle* p) override {
 		while(true) {
 			Node expected = freelist;
 			Node desired = getParticleNodePtr(p);
+			desired->next = expected;
 			if(std::atomic_compare_exchange_strong(&freelist,&expected,desired)) return;
 		}
 	}
@@ -192,15 +194,43 @@ public:
 	}
 
 	virtual void stepComplete() override {
+		haltIteratorCreation();
 		waitForLivingIterators();
 		this->living = this->done;
+		append(&this->living, &this->updated);
+		this->updated = NULL;
 		this->done = NULL;
+		resumeIteratorCreation();
 	}
 
 private:
+	bool iteratorCreationHalted;
+
+	void haltIteratorCreation() {
+		iteratorCreationHalted = true;
+	}
+
+	void resumeIteratorCreation() {
+		iteratorCreationHalted = false;
+	}
 
 	void waitForLivingIterators() {
 		while(numLivingIterator != 0) ;
+	}
+
+	void append(volatile atomic<Node>* dst, volatile atomic<Node>* src) {
+		while(true) {
+			Node expected = *src;
+			if(expected == NULL) return;
+			Node desired = expected->next;
+			if(!atomic_compare_exchange_strong(src, &expected, desired)) continue;
+
+			while(true) {
+				Node dstExpected = *dst;
+				expected->next = *dst;
+				if(atomic_compare_exchange_strong(dst,&dstExpected,expected)) break;
+			}
+		}
 	}
 
 
@@ -223,9 +253,10 @@ private:
 	void affectNumLivingIterators(int delta) {
 		//TODO release a living iterator.
 		while(true) {
-		int64_t expected = numLivingIterator;
-		int64_t desired = expected + delta;
-		if(std::atomic_compare_exchange_strong(&this->numLivingIterator, &expected, desired)) return;
+			if(iteratorCreationHalted && delta > 0) continue;
+			int64_t expected = numLivingIterator;
+			int64_t desired = expected + delta;
+			if(std::atomic_compare_exchange_strong(&this->numLivingIterator, &expected, desired)) return;
 		}
 	}
 
