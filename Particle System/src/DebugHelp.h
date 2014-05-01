@@ -17,6 +17,8 @@
 #define DEBUG_ASSERT(expr)
 #endif
 
-
+#define TEST_ASSERT_TRUE(expr) 			assert(expr)
+#define TEST_ASSERT_EQUAL(expr1,expr2) 	assert((expr1) == (expr2))
+#define TEST_ASSERT_FALSE(expr) 		assert((expr) == false)
 
 #endif /* DEBUGHELP_H_ */

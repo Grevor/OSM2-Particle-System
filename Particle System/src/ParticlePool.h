@@ -49,6 +49,20 @@ public:
 	 */
 	virtual void stepComplete() = 0;
 
+	/**
+	 * Gets the size of this particle pool.
+	 * @return
+	 * The size of this pool. If the pool has variable size, return -1.
+	 */
+	virtual int size() = 0;
+
+	/**
+	 * Retrieves an estimate on the number of living particles in the pool at the time.
+	 * @return
+	 * An estimate of the number of living particles in the pool.
+	 */
+	virtual int numberOfLivingParticles() = 0;
+
 	virtual ~ParticlePool() {}
 };
 

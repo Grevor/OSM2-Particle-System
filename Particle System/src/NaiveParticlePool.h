@@ -35,6 +35,7 @@ class NaiveParticlePool: public ParticlePool<Particle> {
 	int size;
 	//boost::mutex livingIteratorCreationMutex;
 	volatile atomic<int64_t> numLivingIterator;
+	volatile atomic<int64_t> numLiving;
 
 public:
 	NaiveParticlePool(int poolSize) {
