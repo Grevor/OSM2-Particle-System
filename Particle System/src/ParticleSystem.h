@@ -116,8 +116,21 @@ public:
 		return loopingSystem;
 	}
 
+	/**
+	 * Checks if this particle system is alive.
+	 * @return
+	 */
 	virtual bool isAlive() override {
 		return alive;
+	}
+
+	/**
+	 * Sets the alive flag of this particle system.
+	 * A particle system which is not alive will stop being updated, but may reside in memory until later.
+	 * @param flag The value to set.
+	 */
+	void setAlive(bool flag) override {
+		alive = flag;
 	}
 
 	/**

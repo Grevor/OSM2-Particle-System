@@ -30,6 +30,7 @@ template<typename T> struct particleTest_t {
 	T expectedVal;
 	int poolSize;
 	int iterations;
+	bool threadsShouldSleep;
 };
 
 //Denotes a thread which is living.
@@ -40,19 +41,25 @@ template<typename T> void* livingThread(void* data) {
 		T* particle = iter->next();
 		if(particle == NULL) return NULL;
 		TEST_ASSERT_TRUE(*particle == pData->expectedVal);
-		waitFreeUpdate(&pData->atomicCounter, 1);
+		lockFreeUpdate(&pData->atomicCounter, 1);
 	}
 	return NULL;
 }
 
+//entry point for an update thread. Has a built-in sleep before starting operations to test certain cases.
 template<typename T> void* updateThread(void* data) {
 	struct particleTest_t<T>* pData = (struct particleTest_t<T>*)data;
-	sleep(rand()%10);
+	if(pData->threadsShouldSleep) sleep(rand()%1000);
 	pData->system->update();
 	return NULL;
 }
 
-void waitFreeUpdate(std::atomic<int64_t>* var, int64_t delta) {
+/**
+ * Updates an atomic int as desired.
+ * @param var Pointer to atomic variable.
+ * @param delta Difference.
+ */
+void lockFreeUpdate(std::atomic<int64_t>* var, int64_t delta) {
 	while(true) {
 		int64_t expected = *var;
 		int64_t desired = expected - delta;
@@ -60,7 +67,12 @@ void waitFreeUpdate(std::atomic<int64_t>* var, int64_t delta) {
 	}
 }
 
-
+/**
+ * Spawns the desired number of threads.
+ * @param num Amount od threads
+ * @param fn The function to call.
+ * @param data The function argument.
+ */
 void spawnWorkerThreads(int num, void* (*fn)(void*), void* data) {
 	pthread_t thread;
 	for(int i = 0; i < num; i++) {
@@ -90,6 +102,7 @@ template<typename T> void testParticleSystem(
 	testData.atomicCounter = 0;
 	testData.iterations = iterations;
 	testData.poolSize = poolSize;
+	testData.threadsShouldSleep = true;
 
 	ensureCorrectInitializationAndLivingIterator_multiThreadedUpdate<T>(&testData);
 	ensureSingularityAndValidity_multiThreadedUpdate(&testData);
@@ -101,6 +114,7 @@ template<typename T> void testParticleSystem(
  * @param size - The size
  * @param type The object to check for.
  * @return
+ * True if the value is not in the array, else false.
  */
 template<typename T> bool notInArray(T* array, int size, T type) {
 	for(int i = 0; i < size; i++) {
@@ -110,7 +124,8 @@ template<typename T> bool notInArray(T* array, int size, T type) {
 }
 
 /**
- * Ensures correct initialization and that the living particle-iterator works as specified in the interface. This test may not apply to all systems.
+ * Ensures correct initialization and that the living particle-iterator works as specified in the interface.
+ * This test may not apply to all systems.
  *
  * [NOTICE] This test assumes that no particle dies during the specified number of iterations.
  *
@@ -177,6 +192,34 @@ template<typename T> void* ensureSingularityAndValidity_multiThreadedUpdate(void
 		delete iter;
 	}
 	return NULL;
+}
+
+template<typename T> void testReset() {
+
+}
+
+/**
+ * Tests the setAlive and isAlive functions.
+ * @param system The system to test.
+ */
+template<typename T> void testAlive(ParticleSystem<T>* system) {
+	//Tests persistent state after isAlive() call.
+	bool state = system->isAlive();
+	TEST_ASSERT_EQUAL(state, system->isAlive());
+
+	//Tests simple case
+	system->setAlive(false);
+	TEST_ASSERT_FALSE(system->isAlive());
+	system->setAlive(true);
+	TEST_ASSERT_TRUE(system->isAlive());
+
+	//Tests multiple of same. (and re-enabling/disabling)
+	system->setAlive(false);
+	system->setAlive(false);
+	TEST_ASSERT_FALSE(system->isAlive());
+	system->setAlive(true);
+	system->setAlive(true);
+	TEST_ASSERT_TRUE(system->isAlive());
 }
 
 #endif /* PARTICLESYSTEM_TEST_H_ */
