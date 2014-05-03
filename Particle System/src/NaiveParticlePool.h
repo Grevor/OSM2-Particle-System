@@ -32,7 +32,7 @@ class NaiveParticlePool: public ParticlePool<Particle> {
 	volatile atomic<Node> done;
 
 	Node pool;
-	int size;
+	int pSize;
 	//boost::mutex livingIteratorCreationMutex;
 	volatile atomic<int64_t> numLivingIterator;
 	volatile atomic<int64_t> numLiving;
@@ -41,7 +41,7 @@ public:
 	NaiveParticlePool(int poolSize) {
 		pool = (Node)calloc(poolSize, sizeof(struct particleNode_t));
 		assert(pool != NULL);
-		size = poolSize;
+		pSize = poolSize;
 		freelist = NULL;
 		updated = NULL;
 		done = NULL;
@@ -204,6 +204,9 @@ public:
 		resumeIteratorCreation();
 	}
 
+	virtual int size() override {
+		return pSize;
+	}
 private:
 	bool iteratorCreationHalted;
 
@@ -240,7 +243,7 @@ private:
 		return (Node)PTR_SUB(pa,offsetof(particleNode_t,p));
 #else
 		Node returnVal = (Node)PTR_SUB(pa,offsetof(particleNode_t,p));
-		DEBUG_ASSERT(pool <= returnVal && returnVal < pool + size);
+		DEBUG_ASSERT(pool <= returnVal && returnVal < pool + pSize);
 		DEBUG_ASSERT(PTR_SUB(returnVal, (size_t)pool) % sizeof(struct particleNode_t) == 0);
 		return returnVal;
 #endif

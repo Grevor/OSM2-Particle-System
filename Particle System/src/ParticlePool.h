@@ -61,7 +61,7 @@ public:
 	 * @return
 	 * An estimate of the number of living particles in the pool.
 	 */
-	virtual int numberOfLivingParticles() = 0;
+	//virtual int numberOfLivingParticles() = 0;
 
 	virtual ~ParticlePool() {}
 };

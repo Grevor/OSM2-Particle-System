@@ -80,33 +80,6 @@ void spawnWorkerThreads(int num, void* (*fn)(void*), void* data) {
 	}
 }
 
-/**
- * Tests the specified system, invoking all functions on it.
- * @param system
- * @param particleValidator
- * @param spawnCurve
- * @param pool
- * @param poolSize
- * @param iterations
- */
-template<typename T> void testParticleSystem(
-		ParticleSystem<T>* system,
-		bool (*particleValidator)(T* particle, int iteration),
-		Curve<long,long>* spawnCurve,
-		ParticlePool<T>* pool,
-		int poolSize,
-		int iterations) {
-	struct particleTest_t<T> testData;
-	testData.system = system;
-	testData.validationFunction = particleValidator;
-	testData.atomicCounter = 0;
-	testData.iterations = iterations;
-	testData.poolSize = poolSize;
-	testData.threadsShouldSleep = true;
-
-	ensureCorrectInitializationAndLivingIterator_multiThreadedUpdate<T>(&testData);
-	ensureSingularityAndValidity_multiThreadedUpdate(&testData);
-}
 
 /**
  * Checks that the specified value is not in the array.
@@ -139,10 +112,11 @@ template<typename T> void* ensureCorrectInitializationAndLivingIterator_multiThr
 
 	for(int i = 0; pData->iterations; i++) {
 		pData->system->step();
+		spawnWorkerThreads(10,&(updateThread<T>),data);
 		numParticles += pData->spawnCurve->getValue(i+1);
 		numParticlesThisIteration = 0;
 		sleep(rand() % 10);
-		ParticleIterator<T>* iter = pData->system->getLivingIterator();
+		ParticleIterator<T>* iter = pData->system->getLivingParticles();
 		TEST_ASSERT_TRUE(iter != NULL);
 
 		while(iter->next() != NULL) {
@@ -152,6 +126,8 @@ template<typename T> void* ensureCorrectInitializationAndLivingIterator_multiThr
 		TEST_ASSERT_TRUE(numParticlesThisIteration == numParticles);
 		delete iter;
 	}
+
+	return NULL;
 }
 
 /**
@@ -176,7 +152,7 @@ template<typename T> void* ensureSingularityAndValidity_multiThreadedUpdate(void
 		currentReadPos = 0;
 		pData->system->step();
 		spawnWorkerThreads(NUM_THREADS,&updateThread<T>,data);
-		ParticleIterator<T>* iter = pData->system->getLivingIterator();
+		ParticleIterator<T>* iter = pData->system->getLivingParticles();
 
 		while(iter->hasNext()) {
 			T* particle = iter->next();
@@ -196,6 +172,37 @@ template<typename T> void* ensureSingularityAndValidity_multiThreadedUpdate(void
 
 template<typename T> void testReset() {
 
+}
+
+
+
+/**
+ * Tests the specified system, invoking all functions on it.
+ * @param system
+ * @param particleValidator
+ * @param spawnCurve
+ * @param pool
+ * @param poolSize
+ * @param iterations
+ */
+template<typename T> void testParticleSystem(
+		ParticleSystem<T>* system,
+		bool (*particleValidator)(T* particle, int iteration),
+		Curve<long,long>* spawnCurve,
+		ParticlePool<T>* pool,
+		int poolSize,
+		int iterations) {
+	struct particleTest_t<T> testData;
+	testData.system = system;
+	testData.validationFunction = particleValidator;
+	testData.atomicCounter = 0;
+	testData.iterations = iterations;
+	testData.poolSize = poolSize;
+	testData.spawnCurve = spawnCurve;
+	testData.threadsShouldSleep = true;
+
+	ensureCorrectInitializationAndLivingIterator_multiThreadedUpdate<T>((void*)&testData);
+	ensureSingularityAndValidity_multiThreadedUpdate<T>((void*)&testData);
 }
 
 /**

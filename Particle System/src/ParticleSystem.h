@@ -129,7 +129,7 @@ public:
 	 * A particle system which is not alive will stop being updated, but may reside in memory until later.
 	 * @param flag The value to set.
 	 */
-	void setAlive(bool flag) override {
+	void setAlive(bool flag) {
 		alive = flag;
 	}
 
