@@ -9,7 +9,6 @@
 #ifndef NEIGHBOURTREE_H_
 #define NEIGHBOURTREE_H_
 
-#include "../kdtree/kdtree.h"
 #include <ANN/ANN.h>
 
 /* This struct is used to "carry out" our result from calling functions. */
