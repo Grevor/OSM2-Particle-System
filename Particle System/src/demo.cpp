@@ -15,12 +15,13 @@
 #include "SimpleParticle.h"
 #include "ParticleSystem.h"
 #include "NaiveParticlePool.h"
+#include "ParticleSystem_Test.h"
 
 using namespace Curves;
 
 #define ITER 10
-#define NUM_PARTICLES (1 << 24)
-#define NUM_THREADS 10
+#define NUM_PARTICLES (1 << 22)
+#define NUM_THREADS 1
 
 bool isInArray(struct simpleParticle** arr, size_t length, struct simpleParticle* test) {
 	for(size_t i = 0; i < length; i++)
@@ -39,6 +40,11 @@ void* workFunction(void* iter) {
 	return NULL;
 }
 
+bool valFunc(struct simpleParticle* p, int i) {
+	return true;
+	//return p->value == i;
+}
+
 void startWorkerThread(ParticleSystem<struct simpleParticle>* system) {
 	pthread_t thread;
 	struct foo* fooStruct = new struct foo();
@@ -49,14 +55,17 @@ void startWorkerThread(ParticleSystem<struct simpleParticle>* system) {
 int main(int argc, char **argv) {
 	NaiveParticlePool<struct simpleParticle>* pool = new NaiveParticlePool<struct simpleParticle>(NUM_PARTICLES);
 	SimpleParticleInitializer* init = new SimpleParticleInitializer();
-	SimpleParticleUpdater* update = new SimpleParticleUpdater(5);
-	ConstantCurve c(NUM_PARTICLES >> 3);
-	ParticleSystem<struct simpleParticle>* system = new ParticleSystem<struct simpleParticle>(pool,init,update,&c,false);
+	SimpleParticleUpdater* update = new SimpleParticleUpdater(100);
+	Curve<long,long>* c = new ConstantCurve(400);
+
+	ParticleSystem<struct simpleParticle>* system = new ParticleSystem<struct simpleParticle>(pool,init,update,c,false);
+
+	testParticleSystem(system,&valFunc,c,pool,NUM_PARTICLES,30);
 
 	printf("Hello world!\n");
 
 	printf("Managed to create curve on stack.\n");
-	printf("Curve gives value %ld for input 45.\n", c.getValue(45));
+	printf("Curve gives value %ld for input 45.\n", c->getValue(45));
 
 	//struct simpleParticle** readParticles = (struct simpleParticle**) calloc(NUM_PARTICLES,sizeof(struct simpleParticle*));
 	size_t currentPos = 0;

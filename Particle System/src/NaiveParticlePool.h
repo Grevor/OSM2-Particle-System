@@ -11,6 +11,7 @@
 #include "ParticlePool.h"
 #include <boost/atomic/atomic.hpp>
 #include <atomic>
+#include <mutex>
 #include <stddef.h>
 #include <stdlib.h>
 using namespace std;
@@ -36,6 +37,7 @@ class NaiveParticlePool: public ParticlePool<Particle> {
 	//boost::mutex livingIteratorCreationMutex;
 	volatile atomic<int64_t> numLivingIterator;
 	volatile atomic<int64_t> numLiving;
+	pthread_mutex_t livingMutex;
 
 public:
 	NaiveParticlePool(int poolSize) {
@@ -54,6 +56,7 @@ public:
 			n->next = freelist;
 			freelist = n;
 		}
+		pthread_mutex_init(&livingMutex,NULL);
 	}
 
 	virtual ~NaiveParticlePool() {
@@ -112,33 +115,58 @@ public:
 		 * in that it checks not only its own stack, but also if the update-stack is empty.
 		 *
 		 * Do note that this iterator may, in some cases, miss particles which are initialized the same frame as the
+		 * iterator itself.
 		 */
 		class LivingIterator : public StackIterator {
 
 			volatile atomic<Node>* updatePool;
 			NaiveParticlePool* pool;
+			Node currentNode, topNode, oldTop;
 		public:
 			LivingIterator(volatile atomic<Node>* stack, volatile atomic<Node>* donePool, volatile atomic<Node>* updatePool, NaiveParticlePool* pool) :
 				StackIterator(stack, donePool) {
 				this->updatePool = updatePool;
 				this->pool = pool;
+				topNode = *this->stack;
+				currentNode = topNode;
+				oldTop = NULL;
+				this->pool->affectNumLivingIterators(1);
 			}
 
 			bool hasNext() override {
-				return *updatePool != NULL || *StackIterator::stack != NULL;
+				return *updatePool != NULL || (currentNode != oldTop || topNode != *this->stack); //*StackIterator::stack != NULL;
 			}
 
 			Particle* next() override {
 				while(true) {
-					Particle* part = StackIterator::next();
+					Particle* part = livingNext();//StackIterator::next();
 					if(part == NULL) {
-						if(!hasNext()) return NULL;
-						else continue;
+						if(!hasNext())
+							return NULL;
 					} else {
 						return part;
 					}
 				}
 				return NULL;
+			}
+
+			Particle* livingNext() {
+				if(currentNode != oldTop) {
+					Particle* p = &currentNode->p;
+					currentNode = currentNode->next;
+					return p;
+				} else {
+					//Set the old top to the "percieved top of stack", and sets a new "percieved top of stack"
+					//The currentNode is set to this percieved top.
+					oldTop = topNode;
+					topNode = *this->stack;
+					currentNode = topNode;
+					return NULL;
+				}
+			}
+
+			void done(Particle* p) override {
+
 			}
 
 			~LivingIterator() override {
@@ -150,7 +178,7 @@ public:
 		friend LivingIterator;
 
 	ParticleIterator<Particle>* getAllocationIterator() {
-		return new StackIterator(&this->freelist, &this->living);
+		return new StackIterator(&this->freelist, &this->updated);
 	}
 
 	ParticleIterator<Particle>* getUpdateIterator() {
@@ -158,8 +186,10 @@ public:
 	}
 
 	ParticleIterator<Particle>* getLivingIterator() {
-		this->affectNumLivingIterators(1);
-		return new LivingIterator(&this->updated, &this->done, &this->living, this);
+		pthread_mutex_lock(&livingMutex);
+		ParticleIterator<Particle>* iter = new LivingIterator(&this->updated, NULL, &this->living, this);
+		pthread_mutex_unlock(&livingMutex);
+		return iter;
 	}
 
 	void returnParticle(Particle* p) override {
@@ -195,13 +225,16 @@ public:
 	}
 
 	virtual void stepComplete() override {
-		haltIteratorCreation();
+		//haltIteratorCreation();
+		pthread_mutex_lock(&livingMutex);
 		waitForLivingIterators();
-		this->living = this->done;
-		append(&this->living, &this->updated);
+		//this->living = this->done;
+		//append(&this->living, &this->updated);
+		this->living = this->updated;
 		this->updated = NULL;
 		this->done = NULL;
-		resumeIteratorCreation();
+		pthread_mutex_unlock(&livingMutex);
+		//resumeIteratorCreation();
 	}
 
 	virtual int size() override {
@@ -257,7 +290,7 @@ private:
 	void affectNumLivingIterators(int delta) {
 		//TODO release a living iterator.
 		while(true) {
-			if(iteratorCreationHalted && delta > 0) continue;
+			//if(iteratorCreationHalted && delta > 0) continue;
 			int64_t expected = numLivingIterator;
 			int64_t desired = expected + delta;
 			if(std::atomic_compare_exchange_strong(&this->numLivingIterator, &expected, desired)) return;

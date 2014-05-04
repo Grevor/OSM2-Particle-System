@@ -19,7 +19,7 @@
 using namespace Curves;
 
 #define VARIADIC_POOL_SIZE_SIZE 1 << 16
-#define NUM_THREADS 10
+#define NUM_THREADS 1
 
 template<typename T> struct particleTest_t {
 	ParticleSystem<T>* system;
@@ -46,10 +46,24 @@ template<typename T> void* livingThread(void* data) {
 	return NULL;
 }
 
+template<typename T> int64_t systemParticles(ParticleSystem<T>* system) {
+	int64_t num = 0;
+	ParticleIterator<T>* iter = system->getLivingParticles();
+	T* p;
+	while(true) {
+		p = iter->next();
+		if(p == NULL) break;
+		num++;
+		iter->done(p);
+	}
+	delete iter;
+	return num;
+}
+
 //entry point for an update thread. Has a built-in sleep before starting operations to test certain cases.
 template<typename T> void* updateThread(void* data) {
 	struct particleTest_t<T>* pData = (struct particleTest_t<T>*)data;
-	if(pData->threadsShouldSleep) sleep(rand()%1000);
+	if(pData->threadsShouldSleep) usleep(rand()%1000000);
 	pData->system->update();
 	return NULL;
 }
@@ -73,11 +87,12 @@ void lockFreeUpdate(std::atomic<int64_t>* var, int64_t delta) {
  * @param fn The function to call.
  * @param data The function argument.
  */
-void spawnWorkerThreads(int num, void* (*fn)(void*), void* data) {
-	pthread_t thread;
+pthread_t* spawnWorkerThreads(int num, void* (*fn)(void*), void* data) {
+	pthread_t* threads = (pthread_t*) malloc(num * sizeof(pthread_t));
 	for(int i = 0; i < num; i++) {
-		pthread_create(&thread, NULL, fn, data);
+		pthread_create(&threads[i], NULL, fn, data);
 	}
+	return threads;
 }
 
 
@@ -96,37 +111,59 @@ template<typename T> bool notInArray(T* array, int size, T type) {
 	return true;
 }
 
+void joinThreads(pthread_t* threads, int num) {
+	for(; num > 0; num--) {
+		pthread_join(threads[num - 1], NULL);
+	}
+	free(threads);
+}
+
 /**
  * Ensures correct initialization and that the living particle-iterator works as specified in the interface.
  * This test may not apply to all systems.
  *
- * [NOTICE] This test assumes that no particle dies during the specified number of iterations.
+ * [NOTICE] This test assumes that no particle dies during the specified number of iterations, and that the pool will not become full.
  *
  * @param data - Pointer to a struct particleTest_t<T> containing all information about the test.
  */
 template<typename T> void* ensureCorrectInitializationAndLivingIterator_multiThreadedUpdate(void* data) {
+	printf("Testing iterator behaviors and correct initialization and spawning with multi-threaded update running.\n");
+
 	struct particleTest_t<T>* pData = (struct particleTest_t<T>*)data;
 
 	int64_t numParticles = 0;
+	int64_t lastNumParticles = 0;
 	int64_t numParticlesThisIteration = 0;
+	pthread_t* threads = NULL;
 
-	for(int i = 0; pData->iterations; i++) {
+	for(int i = 0; i < pData->iterations; i++) {
+		if(threads != NULL) joinThreads(threads, NUM_THREADS);
+		TEST_ASSERT_EQUAL(numParticles, systemParticles(pData->system));
+
 		pData->system->step();
-		spawnWorkerThreads(10,&(updateThread<T>),data);
+		threads = spawnWorkerThreads(10,(updateThread<T>),data);
+		lastNumParticles = numParticles;
 		numParticles += pData->spawnCurve->getValue(i+1);
 		numParticlesThisIteration = 0;
-		sleep(rand() % 10);
+		usleep(rand() % 1000);
 		ParticleIterator<T>* iter = pData->system->getLivingParticles();
 		TEST_ASSERT_TRUE(iter != NULL);
 
-		while(iter->next() != NULL) {
+		T* part;
+		while(true) {
+			part = iter->next();
+			if(part == NULL) break;
 			numParticlesThisIteration++;
+			iter->done(part);
 		}
 
-		TEST_ASSERT_TRUE(numParticlesThisIteration == numParticles);
+		printf("Expected range: [%ld, %ld], particles: %ld\n", lastNumParticles, numParticles, numParticlesThisIteration);
+		TEST_ASSERT_TRUE(lastNumParticles <= numParticlesThisIteration && numParticlesThisIteration <= numParticles);
 		delete iter;
+		printf("Ended iteration %d with valid values.\n", i + 1);
 	}
 
+	printf("Test succeeded.\n");
 	return NULL;
 }
 
@@ -138,6 +175,7 @@ template<typename T> void* ensureCorrectInitializationAndLivingIterator_multiThr
  * @param data - Pointer to a struct particleTest_t<T> containing all data for the test.
  */
 template<typename T> void* ensureSingularityAndValidity_multiThreadedUpdate(void* data) {
+	printf("Testing living iterator (no repeats) and particle validity.\n");
 	struct particleTest_t<T>* pData = (struct particleTest_t<T>*)data;
 
 	T** readParticles;
@@ -167,6 +205,7 @@ template<typename T> void* ensureSingularityAndValidity_multiThreadedUpdate(void
 		}
 		delete iter;
 	}
+	printf("Test succeeded.\n");
 	return NULL;
 }
 
@@ -201,8 +240,16 @@ template<typename T> void testParticleSystem(
 	testData.spawnCurve = spawnCurve;
 	testData.threadsShouldSleep = true;
 
+	srand(time(NULL));
+
+	testAlive(system);
+	system->reset();
 	ensureCorrectInitializationAndLivingIterator_multiThreadedUpdate<T>((void*)&testData);
+	system->reset();
 	ensureSingularityAndValidity_multiThreadedUpdate<T>((void*)&testData);
+	//system->reset();
+
+	sleep(3);
 }
 
 /**
