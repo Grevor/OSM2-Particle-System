@@ -6,6 +6,9 @@ debug/
 latex/
 html/
 
+# Compile stage files
+depend
+
 # Compiled Object files
 *.slo
 *.lo
