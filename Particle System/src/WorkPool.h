@@ -15,7 +15,7 @@ class WorkPool {
 	std::list<void (*)(void)> workFunctions;
 	boost::mutex workFuctionsMutex;
 	boost::interprocess::interprocess_semaphore workSemaphore;
-	int workerCount; //number of thread currently executing work in this pool
+	int nWorkingThreads;
 public:
 	WorkPool();
 	virtual ~WorkPool();
@@ -35,14 +35,13 @@ public:
 	void stop();
 	/**
 	 * Checks if the WorkPool is empty.
-	 * @return
+	 * @return true if empty, else false.
 	 */
 	bool isEmpty();
 	/**
 	 * Blocking call that returns when this WorkPool is empty.
-	 * @return true if empty, else false.
 	 */
-	bool waitUntilEmpty();
+	void waitUntilEmpty();
 	/**
 	 * Posts a work to this WorkPool.
 	 * @param work is a new work to perform.
