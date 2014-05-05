@@ -121,7 +121,10 @@ public:
 
 			volatile atomic<Node>* updatePool;
 			NaiveParticlePool* pool;
-			Node currentNode, topNode, oldTop;
+			volatile atomic<Node> currentNode, topNode, oldTop;
+			//The lower half (32 bit) is the index of the current node, the upper is the old top of stack.
+			//This will require a remake of all Node pointers to pool-indicies.
+			volatile atomic<int64_t> currentNodeAndOldTop;
 		public:
 			LivingIterator(volatile atomic<Node>* stack, volatile atomic<Node>* donePool, volatile atomic<Node>* updatePool, NaiveParticlePool* pool) :
 				StackIterator(stack, donePool) {
@@ -152,17 +155,46 @@ public:
 
 			Particle* livingNext() {
 				if(currentNode != oldTop) {
-					Particle* p = &currentNode->p;
+					Particle* p = &expected->p;
 					currentNode = currentNode->next;
 					return p;
 				} else {
-					//Set the old top to the "percieved top of stack", and sets a new "percieved top of stack"
-					//The currentNode is set to this percieved top.
+					//Set the old top to the "perceived top of stack", and sets a new "perceived top of stack"
+					//The currentNode is set to this perceived top.
 					oldTop = topNode;
 					topNode = *this->stack;
 					currentNode = topNode;
 					return NULL;
 				}
+				return NULL;
+			}
+
+			Particle* livingNextM() {
+				Node desired, expected;
+				while(true) {
+					expected = currentNode;
+					if(expected != oldTop) {
+						Particle* p = &expected->p;
+						desired = expected->next;
+						if(atomic_compare_exchange_strong(&this->currentNode, &expected, desired)) return p;
+						else continue;//Redo if failed.
+					} else {
+						//Set the old top to the "perceived top of stack", and sets a new "perceived top of stack"
+						//The currentNode is set to this perceived top.
+						expected = topNode;
+						desired = *this->stack;
+						if(atomic_compare_exchange_strong(&topNode, &expected, desired)) {
+							oldTop = expected;
+
+						}
+
+						oldTop = topNode;
+						topNode = *this->stack;
+						currentNode = topNode;
+						return NULL;
+					}
+				}
+				return NULL;
 			}
 
 			void done(Particle* p) override {
