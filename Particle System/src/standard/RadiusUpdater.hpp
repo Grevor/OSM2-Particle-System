@@ -26,9 +26,9 @@ public:
 	}
 
 	bool updateParticle(StandardParticle* particle) {
-		if(start <= particle->lifetime.lifetimeElapsed && particle->lifetime.lifetimeElapsed <= end) {
+		if(start <= particle->lifetime.lifetimeElapsed() && particle->lifetime.lifetimeElapsed() <= end) {
 			particle->render.size.normalize();
-			particle->render.size *= radiusCurve->getValue(particle->lifetime.lifetimeElapsed);
+			particle->render.size *= radiusCurve->getValue(particle->lifetime.lifetimeElapsed());
 		}
 		return false;
 	}

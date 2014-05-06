@@ -64,8 +64,9 @@ struct lifetimeData {
 	bool fadeBegan;
 	float fadeOutBegin;
 	float fadeOutTime;
-	float lifetimeElapsed;
+	float lifetimeCurrent;
 	float lifetime;
+	float lifetimeStart;
 	float fadeInTime;
 
 	bool fadingIn() {
@@ -73,7 +74,7 @@ struct lifetimeData {
 	}
 
 	bool fadingOut() {
-		return fadeBegan && (lifetimeElapsed - fadeOutBegin) < fadeOutTime;
+		return fadeBegan && (lifetimeElapsed() - fadeOutBegin) < fadeOutTime;
 	}
 
 	inline bool alive() {
@@ -81,30 +82,34 @@ struct lifetimeData {
 	}
 
 	inline float getInterpolationValueFadeIn() {
-		return lifetimeElapsed / fadeInTime;
+		return lifetimeElapsed() / fadeInTime;
 	}
 
 	inline float getInterpolationValueFadeOut() {
-		return (lifetimeElapsed - fadeOutBegin) / fadeOutTime;
+		return (lifetimeElapsed() - fadeOutBegin) / fadeOutTime;
 	}
 
 	float getRemainingLifetime() {
-		if(fadingOut()) return fadeOutTime - (lifetimeElapsed - fadeOutBegin);
-		else return lifetime - lifetimeElapsed;
+		if(fadingOut()) return fadeOutTime - (lifetimeElapsed() - fadeOutBegin);
+		else return lifetime - lifetimeElapsed();
 	}
 
 	bool setElapsed(float elapsed) {
 		if(elapsed < 0) return false;
 
-		lifetimeElapsed = elapsed;
-		if(lifetimeElapsed > fadeOutBegin) {
+		lifetimeCurrent = elapsed;
+		if(lifetimeCurrent > fadeOutBegin) {
 			this->fadeBegan = true;
 		}
 		return true;
 	}
 
 	inline bool addElappsed(float delta) {
-		return setElapsed(lifetimeElapsed + delta);
+		return setElapsed(lifetimeCurrent + delta);
+	}
+
+	inline float lifetimeElapsed() {
+		return lifetimeCurrent - lifetimeStart;
 	}
 };
 
@@ -122,6 +127,10 @@ struct RenderData {
 	Vector3f size;
 	//Color in RGB-space, given as float for graphics-cards.
 	Vector3f color;
+
+	RenderData() {
+		memset(this, 0, sizeof(RenderData));
+	}
 
 	RenderData(unsigned int alpha, Vector3f size) {
 		this->alpha = alpha;

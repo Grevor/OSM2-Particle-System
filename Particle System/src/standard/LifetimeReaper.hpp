@@ -17,7 +17,7 @@ class LifetimeReaper : public Reaper<StandardParticle> {
 
 public:
 	bool isDead(StandardParticle* particle) override {
-		return !particle->lifetime.alive();
+		return particle->lifetime.lifetimeCurrent >= particle->lifetime.lifetimeStart + particle->lifetime.lifetime;
 	}
 };
 
