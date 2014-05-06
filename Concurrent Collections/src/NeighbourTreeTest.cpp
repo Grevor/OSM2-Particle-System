@@ -1,18 +1,23 @@
+//#include "NeighbourTree.h"
+
 #include "NeighbourTree.h"
+#include <time.h>
+#include <boost/geometry.hpp>
+#include <boost/geometry/index/rtree.hpp>
+#include <boost/foreach.hpp>
+#include <boost/geometry/geometries/point.hpp>
+
+using namespace std;
 
 int main(void) {
-    int first[] = {60, 60};
-    NeighbourTree* tree = new NeighbourTree(2, 50, first);
-    for (int x = 50, y = 50; x != 1; x--,y--) {
-        int a[] = {x,y};
-        tree->initParticle(a);        
+    NeighbourTree* tree = new NeighbourTree();
+    for (double i = 0; i < 10; i++) {
+        double pos[] = {i, i};
+        tree->initParticle(pos);
     }
-    int sec[] = {80, 80};
-    tree->initParticle(sec);
-    int b[] = {10, 10};
-    IndexAndDist result = tree->getNeighbours(b,11);
+    double q_p[] = {6, 8};
+    ReturnCarry result = tree->getNeighbours(q_p, 3);
     tree->printResult(result);
-    tree->freeResult(result);
-    delete tree;
+    
     return 0;
 }
