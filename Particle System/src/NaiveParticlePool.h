@@ -155,8 +155,8 @@ public:
 
 			Particle* livingNext() {
 				if(currentNode != oldTop) {
-					Particle* p = &expected->p;
-					currentNode = currentNode->next;
+					Particle* p = &((Node)currentNode)->p;
+					currentNode = ((Node)currentNode)->next;
 					return p;
 				} else {
 					//Set the old top to the "perceived top of stack", and sets a new "perceived top of stack"

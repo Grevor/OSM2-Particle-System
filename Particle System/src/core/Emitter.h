@@ -15,6 +15,7 @@
  */
 template<typename vectorType>
 class Emitter {
+public:
 	/**
 	 * Emits a position (and possibly other data) for a particle-initialization.
 	 * @return

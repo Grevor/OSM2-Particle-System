@@ -13,7 +13,7 @@
  */
 class Stepable {
 public:
-	virtual ~Stepable();
+	virtual ~Stepable() {}
 	/**
 	 * Steps this Stepable forward. If the Stepable isn't ready to step forward yet, it should block
 	 * until it's ready, and then step.

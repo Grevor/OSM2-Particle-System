@@ -20,6 +20,7 @@ public:
 	}
 
 	void initParticle(StandardParticle* particle) override {
+		particle->vec.pos += *offsetVector;
 	}
 };
 

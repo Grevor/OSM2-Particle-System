@@ -29,6 +29,7 @@ public:
 
 	bool updateParticle(StandardParticle* particle) {
 		particle->render.color = getColor(particle);
+		return false;
 	}
 
 	~ColorUpdater() {}

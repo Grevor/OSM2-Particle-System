@@ -11,6 +11,7 @@
 #include <list>
 #include <iterator>
 #include "ParticleUpdater.h"
+#include "ListFunctions.h"
 
 namespace Particle {
 

@@ -32,15 +32,15 @@ public:
 
 	inline bool boundsY(int y) { return 0 <= y && y < height; }
 
-	void drawDot(int x, int y) {
+	void drawDot(int x, int y, char c) {
 		if(boundsCheck(x,y)) {
-			bitmap[y * width + x] = '*';
+			bitmap[y * width + x] = c;
 		}
 	}
 
 	void clear() {
 		memset(bitmap, ' ', width * height);
-		for(int i = 0; i < height; i++) bitmap[width - 1 + i * height] = '\n';
+		for(int i = 0; i < height; i++) bitmap[width - 1 + i * width] = '\n';
 		bitmap[width * height] = '\0';
 	}
 

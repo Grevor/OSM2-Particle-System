@@ -12,6 +12,16 @@
 #include <iterator>
 
 namespace Particle {
+
+template<typename T> bool contains(std::list<T>* list, T element) {
+	for(typename std::list<T>::iterator iter = list->begin(); iter != list->end(); iter++) {
+		if(*iter == element) {
+			return true;
+		}
+	}
+	return false;
+}
+
 template<typename T> bool addToList(std::list<T>* list, T obj) {
 		if(contains(list, obj)) {
 			list->push_front(obj);
@@ -30,17 +40,8 @@ template<typename T> bool addToList(std::list<T>* list, T obj) {
 		return false;
 	}
 
-	template<typename T> bool contains(std::list<T>* list, T element) {
-		for(typename std::list<T>::iterator iter = list->begin(); iter != list->end(); iter++) {
-			if(*iter == element) {
-				return true;
-			}
-		}
-		return false;
-	}
-
 	template<typename T> void deleteList(std::list<T*>* list) {
-		for(typename std::list<T>::iterator iter = list->begin(); iter != list->end(); iter++) {
+		for(typename std::list<T*>::iterator iter = list->begin(); iter != list->end(); iter++) {
 			delete *iter;
 		}
 	}

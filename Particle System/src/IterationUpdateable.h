@@ -8,6 +8,7 @@
 #ifndef UPDATEABLE_H_
 #define UPDATEABLE_H_
 #include "Living.h"
+#include "Stepable.h"
 /**
  * Interface describing an object which can be updated.
  */

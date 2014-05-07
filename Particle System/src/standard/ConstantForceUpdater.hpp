@@ -12,10 +12,10 @@
 #include <Eigen/Eigen>
 
 using namespace Eigen;
-class ConstantForceUpdater : ParticleUpdater<StandardParticle> {
+class ConstantForceUpdater : public ParticleUpdater<StandardParticle> {
 	Vector3f cForce;
 public:
-	ConstantForceUpdater(Vector3f cForce) {
+	ConstantForceUpdater(Vector3f& cForce) {
 		this->cForce = cForce;
 	}
 

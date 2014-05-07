@@ -12,6 +12,7 @@
 #include <iterator>
 
 #include "ParticleInitializer.h"
+#include "ListFunctions.h"
 
 
 namespace Particle {

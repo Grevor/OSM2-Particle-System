@@ -95,6 +95,10 @@ public:
 		}
 	}
 
+	bool isStepComplete() override {
+		return isDoneWithIteration(currentStep);
+	}
+
 	/**
 	 * Spawns, updates and reaps particles in this ParticleSystem for this iteration.
 	 * Can be called by multiple threads to perform the work concurrently.

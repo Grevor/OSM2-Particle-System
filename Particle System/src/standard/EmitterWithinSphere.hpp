@@ -17,9 +17,10 @@
 using namespace boost;
 
 class EmitterWithinSphere : public Emitter<Vector3f> {
-	static mt19937 RNG = mt19937(time(NULL));
-	static uniform_real<float> range = uniform_real<float>(0,1);
-	static variate_generator<mt19937, uniform_real<float>> random = variate_generator<mt19937, uniform_real<float>>(RNG, range);
+	static boost::mt19937 RNG;
+	static boost::uniform_real<float> range;
+	static boost::variate_generator<mt19937, uniform_real<float>> random;
+	static bool started = false;
 
 	Vector3f sphereMiddle, bias;
 	float radius;
@@ -34,6 +35,12 @@ public:
 		sphereMiddle = middle;
 		this->radius = radius;
 		this->bias = bias;
+		if(!started) {
+			started = true;
+			RNG = boost::mt19937(time(NULL));
+			range = boost::uniform_real<float>(0,1);
+			random = boost::variate_generator<mt19937, uniform_real<float>>(RNG, range);
+		}
 	}
 
 	Vector3f emit() override {

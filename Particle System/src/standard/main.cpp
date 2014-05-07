@@ -17,6 +17,12 @@
 #include "../ConstantCurve.h"
 #include "../ParticleSystem.h"
 #include "../NaiveParticlePool.h"
+#include "ASCIIRenderer.hpp"
+//#include "EmitterInitializer.hpp"
+//#include "EmitterWithinSphere.hpp"
+#include "ConstantForceUpdater.hpp"
+#include "OffsetInitializer.hpp"
+#include "PhysicsUpdater.hpp"
 
 using namespace Particle;
 using namespace Curves;
@@ -28,9 +34,14 @@ void printVector(Vector3f vec) {
 int main(int argc, char **argv) {
 	//StandardTimer timer = StandardTimer();
 
-	MultiUpdater<StandardParticle>* updater;
-	MultiInitializer<StandardParticle>* initializer;
+	Vector3f offset{10, 0 ,0};
+	Vector3f pos {3,4,3};
+	MultiUpdater<StandardParticle>* updater = new MultiUpdater<StandardParticle>(false);
+	MultiInitializer<StandardParticle>* initializer = new MultiInitializer<StandardParticle>();
 	Curve<long,long>* spawnCurve = new ConstantCurve(1);
+	updater->addUpdater(new ConstantForceUpdater(pos));
+	updater->addUpdater(new PhysicsUpdater());
+	initializer->addInitializer(new OffsetInitializer(&offset));
 
 	ParticleSystem<StandardParticle>* system = new ParticleSystem<StandardParticle>(new NaiveParticlePool<StandardParticle>(4000), initializer, updater, spawnCurve, false);
 
@@ -52,10 +63,27 @@ int main(int argc, char **argv) {
 	//printf("Timer shows: %f\n", timer.getTime());
 
 	StringBitmap bmp = StringBitmap(20,20);
-	bmp.drawDot(3, 3);
+	ParticleRenderer<StandardParticle>* renderer = new ASCIIRenderer(&bmp);
 
-	bmp.printBitmap();
+	for(int i = 0; i < 10; i++) {
+		system->step();
+		system->update();
 
+		ParticleIterator<StandardParticle>* iter = system->getLivingParticles();
+
+		while(iter->hasNext()) renderer->renderParticle(iter->next());
+		delete iter;
+		bmp.printBitmap();
+		bmp.clear();
+		printf("-----------------------------------------\n");
+		sleep(1);
+	}
+
+
+	delete system;
+	delete spawnCurve;
+	delete updater;
+	delete initializer;
 	return 0;
 }
 
