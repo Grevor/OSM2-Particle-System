@@ -65,14 +65,15 @@ public:
 	}
 
 	bool updateParticle(T* particle) override {
-		for(std::list<ParticleUpdater<T>*>::iterator iter = updaters.begin(); iter != updaters.end(); iter++) {
-			if(((ParticleUpdater<T>*)*iter)->updateParticle(particle) && careForAnswer) return true;
+		for(typename std::list<ParticleUpdater<T>*>::iterator iter = updaters.begin(); iter != updaters.end(); iter++) {
+			ParticleUpdater<T>* up = *iter;
+			if(up->updateParticle(particle) && careForAnswer) return true;
 		}
 		return false;
 	}
 
 	~MultiUpdater() {
-		deleteList(&initializers);
+		deleteList(&updaters);
 		updaters.clear();
 	}
 

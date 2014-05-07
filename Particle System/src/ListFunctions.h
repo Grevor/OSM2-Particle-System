@@ -21,7 +21,7 @@ template<typename T> bool addToList(std::list<T>* list, T obj) {
 	}
 
 	template<typename T> bool removeFromList(std::list<T>* list, T obj) {
-		for(std::iterator iter = list->begin(); iter != list->end(); iter++) {
+		for(typename std::list<T>::iterator iter = list->begin(); iter != list->end(); iter++) {
 			if(*iter == obj) {
 				list->erase(iter);
 				return true;
@@ -31,7 +31,7 @@ template<typename T> bool addToList(std::list<T>* list, T obj) {
 	}
 
 	template<typename T> bool contains(std::list<T>* list, T element) {
-		for(std::iterator iter = list->begin(); iter != list->end(); iter++) {
+		for(typename std::list<T>::iterator iter = list->begin(); iter != list->end(); iter++) {
 			if(*iter == element) {
 				return true;
 			}
@@ -40,7 +40,7 @@ template<typename T> bool addToList(std::list<T>* list, T obj) {
 	}
 
 	template<typename T> void deleteList(std::list<T*>* list) {
-		for(std::iterator iter = list->begin(); iter != list->end(); iter++) {
+		for(typename std::list<T>::iterator iter = list->begin(); iter != list->end(); iter++) {
 			delete *iter;
 		}
 	}

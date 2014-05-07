@@ -40,14 +40,14 @@ public:
 	}
 
 	bool isDead(T* particle) override {
-		for (std::list<Reaper<T>*>::iterator iter = reapers.begin(); iter < reapers.end(); ++iter) {
+		for (typename std::list<Reaper<T>*>::iterator iter = reapers.begin(); iter < reapers.end(); ++iter) {
 			if(((Reaper<T>*)*iter)->isDead(particle)) return true;
 		}
 		return false;
 	}
 
 	~MultiReaper() {
-		deleteList(&initializers);
+		deleteList(&reapers);
 		reapers.clear();
 	}
 

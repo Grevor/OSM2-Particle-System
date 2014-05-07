@@ -42,7 +42,7 @@ public:
 	}
 
 	void initParticle(T* particle) override {
-		for(std::list<ParticleInitializer<T>*>::iterator iter = initializers.begin(); iter != initializers.end(); iter++) {
+		for(typename std::list<ParticleInitializer<T>*>::iterator iter = initializers.begin(); iter != initializers.end(); iter++) {
 			((ParticleInitializer<T>*)*iter)->initParticle(particle);
 		}
 	}
