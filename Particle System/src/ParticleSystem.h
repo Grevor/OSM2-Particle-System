@@ -19,6 +19,7 @@
 #include <boost/atomic/atomic.hpp>
 #include <assert.h>
 #include <atomic>
+#include <string.h>
 
 using namespace Curves;
 using namespace std;
@@ -29,7 +30,7 @@ using namespace std;
  * Class representing a particle system which can be updated concurrently.
  */
 template<typename Particle>
-class ParticleSystem : IterationUpdateable {
+class ParticleSystem : public IterationUpdateable {
 	ParticlePool<Particle>* pool;
 	ParticleUpdater<Particle>* updater;
 	ParticleInitializer<Particle>* initializer;

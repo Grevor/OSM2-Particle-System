@@ -12,7 +12,7 @@
 /**
  * Interface describing an object which can be updated.
  */
-class IterationUpdateable : Living, Stepable {
+class IterationUpdateable : public Living, public Stepable {
 public:
 	/**
 	 * Updates this object.

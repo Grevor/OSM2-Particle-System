@@ -25,35 +25,35 @@ struct PhysicsVectors {
 	Vector3f force;
 
 	void updatePosAndVel(float mass) {
-		pos = pos + vel;
 		vel = vel + (force / mass);
-		force = Vector3f();
+		pos = pos + vel;
+		force = Vector3f {0,0,0};
 	}
 
-	void addForce(Vector3f force) {
+	void addForce(Vector3f& force) {
 		this->force = this->force + force;
 	}
 
-	void addVelocity(Vector3f vel) {
+	void addVelocity(Vector3f& vel) {
 		this->vel = this->vel + vel;
 	}
 
-	void assertMaxVelocity(Vector3f max) {
+	void assertMaxVelocity(Vector3f& max) {
 		assertMax(vel, max);
 	}
 
-	void assertMinVelocity(Vector3f min) {
+	void assertMinVelocity(Vector3f& min) {
 		assertMin(vel,min);
 	}
 
 private:
-	void assertMin(Vector3f& v, Vector3f min) {
+	void assertMin(Vector3f& v, Vector3f& min) {
 		for (int pos = 0; pos < 3; ++pos) {
 			if(v[pos] < min[pos]) v[pos] = min[pos];
 		}
 	}
 
-	void assertMax(Vector3f& v, Vector3f max) {
+	void assertMax(Vector3f& v, Vector3f& max) {
 		for (int pos = 0; pos < 3; ++pos) {
 			if(v[pos] > max[pos]) v[pos] = max[pos];
 		}

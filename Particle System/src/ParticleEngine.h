@@ -12,10 +12,11 @@
 #include <atomic>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/condition_variable.hpp>
+#include <boost/interprocess/sync/interprocess_semaphore.hpp>
 
-#include <IterationUpdateable.h>
+#include "IterationUpdateable.h"
 
-class ParticleEngine: Stepable {
+class ParticleEngine: public Stepable {
 	boost::thread_group threads;
 	std::list<IterationUpdateable*> particleSystems;
 	std::list<IterationUpdateable*>::iterator taskIter;

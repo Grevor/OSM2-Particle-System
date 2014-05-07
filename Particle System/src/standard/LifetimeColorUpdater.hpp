@@ -9,11 +9,11 @@
 #define LIFETIMECOLORUPDATER_HPP_
 #include "ColorUpdater.hpp"
 
-class LifetimeColorUpdater : ColorUpdater {
+class LifetimeColorUpdater : public ColorUpdater {
 protected:
 	float start, end;
 public:
-	LifetimeColorUpdater(Vector3f target, float start, float end) : ColorUpdater(target) {
+	LifetimeColorUpdater(Vector3f& target, float start, float end) : ColorUpdater(target) {
 		this->start = start;
 		this->end = end;
 	}

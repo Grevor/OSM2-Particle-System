@@ -19,7 +19,8 @@ public:
 	}
 
 	void renderParticle(StandardParticle* particle) override {
-		bmp->drawDot((int)particle->vec.pos[0], (int)particle->vec.pos[1], '*');
+		bmp->drawDot((int)particle->vec.pos[0], (int)particle->vec.pos[1], (char)particle->render.color[0]);
+		//bmp->drawString("Mitra",(int)particle->vec.pos[0], (int)particle->vec.pos[1]);
 	}
 };
 

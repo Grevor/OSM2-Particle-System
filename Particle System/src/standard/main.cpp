@@ -18,11 +18,22 @@
 #include "../ParticleSystem.h"
 #include "../NaiveParticlePool.h"
 #include "ASCIIRenderer.hpp"
-//#include "EmitterInitializer.hpp"
-//#include "EmitterWithinSphere.hpp"
+#include "EmitterInitializer.hpp"
+#include "EmitterWithinSphere.hpp"
 #include "ConstantForceUpdater.hpp"
 #include "OffsetInitializer.hpp"
 #include "PhysicsUpdater.hpp"
+//#include "../ParticleEngine.h"
+#include "OriginDistanceColorUpdater.hpp"
+#include "FixedTimer.hpp"
+#include "LifetimeUpdater.hpp"
+#include "LifetimeInitializer.hpp"
+#include "ReaperUpdater.hpp"
+#include "LifetimeReaper.hpp"
+#include "../core/ZeroInitializer.hpp"
+#include "LifetimeColorUpdater.hpp"
+#include "ExplosionVelocityInitializer.hpp"
+
 
 using namespace Particle;
 using namespace Curves;
@@ -31,19 +42,53 @@ void printVector(Vector3f vec) {
 	printf("(%f, %f, %f)", vec[0], vec[1], vec[2]);
 }
 
+class FooColorInit : public ParticleInitializer<StandardParticle> {
+	Vector3f vv;
+public:
+	FooColorInit(Vector3f& v) {
+		vv = v;
+	}
+
+	void initParticle(StandardParticle* p) override {
+		p->render.color = vv;
+	}
+};
+
 int main(int argc, char **argv) {
 	//StandardTimer timer = StandardTimer();
 
-	Vector3f offset{10, 0 ,0};
-	Vector3f pos {3,4,3};
-	MultiUpdater<StandardParticle>* updater = new MultiUpdater<StandardParticle>(false);
+	Vector3f offset{10, 5 ,0};
+	Vector3f origin {9, 6, 0};
+	Vector3f pos {3,4,0};
+	Vector3f gravity {0, .1, 0};
+	Vector3f targetColor {'z', 0, 0};
+	Vector3f initColor {'a', 0, 0};
+	Vector3f zero {0,0,0};
+
+	FixedTimer<float>* timer = new FixedTimer<float>(0);
+
+	MultiUpdater<StandardParticle>* updater = new MultiUpdater<StandardParticle>(true);
 	MultiInitializer<StandardParticle>* initializer = new MultiInitializer<StandardParticle>();
 	Curve<long,long>* spawnCurve = new ConstantCurve(1);
-	updater->addUpdater(new ConstantForceUpdater(pos));
+	updater->addUpdater(new ReaperUpdater(new LifetimeReaper()));
 	updater->addUpdater(new PhysicsUpdater());
-	initializer->addInitializer(new OffsetInitializer(&offset));
+	updater->addUpdater(new ConstantForceUpdater(gravity));
+	//updater->addUpdater(new OriginDistanceColorUpdater(targetColor,0,30));
+	//updater->addUpdater(new LifetimeColorUpdater(targetColor, 0, 12));
+	updater->addUpdater(new LifetimeUpdater(timer));
 
-	ParticleSystem<StandardParticle>* system = new ParticleSystem<StandardParticle>(new NaiveParticlePool<StandardParticle>(4000), initializer, updater, spawnCurve, false);
+	initializer->addInitializer(new OffsetInitializer(&offset));
+	initializer->addInitializer(new ExplosionVelocityInitializer(&zero, 1));
+	initializer->addInitializer(new EmitterInitializer(new EmitterWithinSphere(zero, 3)));
+	initializer->addInitializer(new FooColorInit(initColor));
+	initializer->addInitializer(new LifetimeUpdater(timer));
+	initializer->addInitializer(new LifetimeInitializer(130));
+	initializer->addInitializer(new ZeroInitializer<StandardParticle>());
+
+	ParticleSystem<StandardParticle>* system = new ParticleSystem<StandardParticle>(
+			new NaiveParticlePool<StandardParticle>(4000), initializer, updater, spawnCurve, false);
+	//ParticleEngine* engine = new ParticleEngine(4);
+	//engine->addParticleSystem(system);
 
 	StandardParticle p;
 	Vector3f force {3,4,3};
@@ -62,12 +107,29 @@ int main(int argc, char **argv) {
 	//usleep(3511111);
 	//printf("Timer shows: %f\n", timer.getTime());
 
-	StringBitmap bmp = StringBitmap(20,20);
+	const int width = 40;
+
+	StringBitmap bmp = StringBitmap(width + 1, 22);
 	ParticleRenderer<StandardParticle>* renderer = new ASCIIRenderer(&bmp);
 
-	for(int i = 0; i < 10; i++) {
+	bool right;
+	for(int i = 0; i < width * 4; i++) {
+		timer->setTime(i);
+		//engine->step();
 		system->step();
 		system->update();
+
+		if(offset[0] >= width) right = false;
+		else if(offset[0] <= 0) right = true;
+
+		if(right) {
+			offset[0]++;
+			origin[0]++;
+		}
+		else {
+			offset[0]--;
+			origin[0]--;
+		}
 
 		ParticleIterator<StandardParticle>* iter = system->getLivingParticles();
 
@@ -76,7 +138,7 @@ int main(int argc, char **argv) {
 		bmp.printBitmap();
 		bmp.clear();
 		printf("-----------------------------------------\n");
-		sleep(1);
+		usleep(100000);
 	}
 
 

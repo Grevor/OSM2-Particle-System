@@ -23,7 +23,7 @@ template<typename T> bool contains(std::list<T>* list, T element) {
 }
 
 template<typename T> bool addToList(std::list<T>* list, T obj) {
-		if(contains(list, obj)) {
+		if(!contains(list, obj)) {
 			list->push_front(obj);
 			return true;
 		}

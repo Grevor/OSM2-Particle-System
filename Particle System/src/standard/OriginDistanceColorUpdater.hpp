@@ -12,7 +12,7 @@
 /**
  * Updater which interpolates the color of a particle depending on its distance from the origin.
  */
-class OriginDistanceColorUpdater : LifetimeColorUpdater {
+class OriginDistanceColorUpdater : public LifetimeColorUpdater {
 public:
 	/**
 	 * Creates a new Updater which changes a particles color to the specified target color as it approaches a certain
@@ -24,11 +24,11 @@ public:
 	 * @param start The start of the interval in which the interpolation will occur.
 	 * @param end The end of the interval in which the interpolation will occur.
 	 */
-	OriginDistanceColorUpdater(Vector3f targetColor, float start, float end) :
+	OriginDistanceColorUpdater(Vector3f& targetColor, float start, float end) :
 		LifetimeColorUpdater(targetColor, start, end) { }
 
 	Vector3f getColor(StandardParticle* particle) override {
-		float distToOrigin = distToOrigin;
+		float distToOrigin = particle->vec.pos.norm();
 		if(start <= distToOrigin) {
 			if(distToOrigin <= end) {
 				float interpolator = (distToOrigin - this->start) / (end - start);

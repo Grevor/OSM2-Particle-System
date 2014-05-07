@@ -10,6 +10,7 @@
 
 template<typename T>
 class Reaper {
+public:
 	Reaper() {}
 
 	/**

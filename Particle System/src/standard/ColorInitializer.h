@@ -29,7 +29,6 @@ public:
 			ColorVector[i] = (random*range) + ColorMin[i];
 			srand(time(NULL));
 			}
-
 		}
 		return ColorVector;
 	}

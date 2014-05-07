@@ -8,9 +8,10 @@
 #ifndef LIFETIMEUPDATER_HPP_
 #define LIFETIMEUPDATER_HPP_
 #include "../ParticleUpdater.h"
+#include "../ParticleInitializer.h"
 #include "../Timer.h"
 
-class LifetimeUpdater : public ParticleUpdater<StandardParticle> {
+class LifetimeUpdater : public ParticleUpdater<StandardParticle>, public ParticleInitializer<StandardParticle> {
 	Timer<float>* timer;
 
 public:
@@ -19,11 +20,16 @@ public:
 	}
 
 	bool updateParticle(StandardParticle* particle) override {
-		float deltaTime = particle->lifetime.lifetimeElapsed;
+		//float deltaTime = particle->lifetime.lifetimeElapsed();
 		particle->lifetime.setElapsed(timer->getTime());
-		deltaTime = particle->lifetime.lifetimeElapsed - deltaTime;
-		particle->vec.updatePosAndVel(deltaTime);
+		//deltaTime = particle->lifetime.lifetimeElapsed - deltaTime;
+		//particle->vec.updatePosAndVel(deltaTime);
 		return false;
+	}
+
+	void initParticle(StandardParticle* particle) override {
+		particle->lifetime.lifetimeStart = timer->getTime();
+		particle->lifetime.lifetimeCurrent = timer->getTime();
 	}
 };
 

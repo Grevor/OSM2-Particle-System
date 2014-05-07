@@ -38,6 +38,12 @@ public:
 		}
 	}
 
+	void drawString(const char* str, int x, int y) {
+		for(int i = 0; str[i] != '\0'; i++) {
+			drawDot(x + i, y, str[i]);
+		}
+	}
+
 	void clear() {
 		memset(bitmap, ' ', width * height);
 		for(int i = 0; i < height; i++) bitmap[width - 1 + i * width] = '\n';

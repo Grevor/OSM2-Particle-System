@@ -14,12 +14,12 @@
 /**
  * Updater which enforces a certain color to a particle.
  */
-class ColorUpdater : ParticleUpdater<StandardParticle> {
+class ColorUpdater : public ParticleUpdater<StandardParticle> {
 protected:
 	Vector3f targetColor;
 public:
 
-	ColorUpdater(Vector3f targetColor) {
+	ColorUpdater(Vector3f& targetColor) {
 		this->targetColor = targetColor;
 	}
 
