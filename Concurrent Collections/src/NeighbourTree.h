@@ -9,36 +9,51 @@
 #ifndef NEIGHBOURTREE_H_
 #define NEIGHBOURTREE_H_
 
-#include <ANN/ANN.h>
+#define DIMENSIONS 2
 
-/* This struct is used to "carry out" our result from calling functions. */
-typedef struct indexAndDist *IndexAndDist;
+#include <boost/geometry/geometries/point.hpp>
+#include <boost/geometry/geometries/box.hpp>
+#include <boost/geometry/index/rtree.hpp>
+
+namespace bg = boost::geometry;
+namespace bgi = boost::geometry::index;
+namespace bgm = boost::geometry::model;
+
+//A point is DIMENSION amount of double.
+typedef bgm::point<double, 2, bg::cs::cartesian> point;
+
+//Each pair in the tree is:
+//  * a point (used for localization)
+//  * a distance (used for returning values)
+//  * an arbitrary void pointer
+typedef std::pair<point, void*> value;
+
+typedef struct returnCarry *ReturnCarry;
 
 class NeighbourTree {
     private:
-        ANNpointArray dataPts;
-        ANNkd_tree* tree;
-        int dim;
-        int amountOfParticles;
-        int free_index;
+        bgi::rtree<value, bgi::quadratic<32> > tree;
     public:
         /* This assumes particles can not have the same position */
         /* Removes the particle at startPosition, and adds a particle at endPosition */
-        void updateParticlePosition(int *startPosition, int *endPosition);
+        void updateParticlePosition(double *startPosition, double *endPosition);
+
+        /* initializes a particle, represented only as a coordinate */
+        void initParticle(double position[]);
 
         /* initializes a particle in the NeighbourTree */
-        void initParticle(int position[]);
+        void initParticle(double position[], void *particle);
 
-        /* Returns the pointer to an int array of size dim */
-        IndexAndDist getNeighbours(int position[], int amountOfNeighbours);
+        /* Returns the pointer to an vector */
+        ReturnCarry getNeighbours(double position[], int amountOfNeighbours);
 
         /* Prints the result */
-        void printResult(IndexAndDist result);
+        void printResult(ReturnCarry result);
 
         /* Frees a IndexAndDist struct */
-        void freeResult(IndexAndDist carry);
+        void freeResult(void *carry);
 
-        NeighbourTree(int dimensions, int amountParticles, int firstParticle[]);
+        NeighbourTree(void);
 
         ~NeighbourTree(void);
     
