@@ -15,25 +15,25 @@
 using namespace boost;
 
 class RandomAlphaInitializer : public ParticleInitializer<StandardParticle> {
-	static mt19937 RandomEngine = mt19937(time(NULL));
-	uniform_int<unsigned char> range;
-	variate_generator<mt19937, uniform_int<unsigned char>> gen;
+	boost::mt19937 randomEngine;
+	boost::random::uniform_int_distribution<int> range;
+	boost::variate_generator<boost::mt19937, boost::random::uniform_int_distribution<int>> gener;
 public:
-	//Unused as of yet.
-	static const int minAlpha = 1, maxAlpha = 2, alpha = 4;
 
-	RandomAlphaInitializer(unsigned char min, unsigned char max) {
+	RandomAlphaInitializer(int min, int max)
+	: randomEngine(time(NULL)), range(min,max), gener(randomEngine, range) {
 		if(min > max) {
-			unsigned char foo = min;
+			int foo = min;
 			min = max;
-			max = min;
+			max = foo;
+			range(min,max);
+			gener(randomEngine, range);
 		}
-		range(min,max);
-		gen(RandomEngine, range);
 	}
 
-	void initializeParticle(StandardParticle* particle) override {
-		particle->render.maxAlpha = gen();
+	void initParticle(StandardParticle* particle) override {
+		particle->render.maxAlpha = (unsigned char) gener();
+
 	}
 };
 

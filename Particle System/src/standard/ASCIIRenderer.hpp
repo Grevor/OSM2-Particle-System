@@ -19,7 +19,10 @@ public:
 	}
 
 	void renderParticle(StandardParticle* particle) override {
-		bmp->drawDot((int)particle->vec.pos[0], (int)particle->vec.pos[1], (char)particle->render.color[0]);
+		//if(particle->render.alpha > 5)
+			bmp->drawDot((int)particle->vec.pos[0], (int)particle->vec.pos[1], (char)particle->render.color[0]);
+		//else
+		//	bmp->drawDot((int)particle->vec.pos[0], (int)particle->vec.pos[1], ' ');
 		//bmp->drawString("Mitra",(int)particle->vec.pos[0], (int)particle->vec.pos[1]);
 	}
 };

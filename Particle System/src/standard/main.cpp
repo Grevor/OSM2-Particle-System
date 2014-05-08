@@ -33,7 +33,8 @@
 #include "../core/ZeroInitializer.hpp"
 #include "LifetimeColorUpdater.hpp"
 #include "ExplosionVelocityInitializer.hpp"
-
+//#include "RandomAlphaInitializer.hpp"
+//#include "AlphaFadeUpdater.hpp"
 
 using namespace Particle;
 using namespace Curves;
@@ -57,29 +58,31 @@ public:
 int main(int argc, char **argv) {
 	//StandardTimer timer = StandardTimer();
 
-	Vector3f offset{10, 5 ,0};
-	Vector3f origin {9, 6, 0};
-	Vector3f pos {3,4,0};
+	Vector3f offset {20, 17 ,0};
+	Vector3f origin {0, 1, 0};
+	Vector3f pos {3, 4, 0};
 	Vector3f gravity {0, .1, 0};
 	Vector3f targetColor {'z', 0, 0};
 	Vector3f initColor {'a', 0, 0};
-	Vector3f zero {0,0,0};
+	Vector3f zero {0, 0, 0};
 
 	FixedTimer<float>* timer = new FixedTimer<float>(0);
 
 	MultiUpdater<StandardParticle>* updater = new MultiUpdater<StandardParticle>(true);
 	MultiInitializer<StandardParticle>* initializer = new MultiInitializer<StandardParticle>();
-	Curve<long,long>* spawnCurve = new ConstantCurve(1);
+	Curve<long,long>* spawnCurve = new ConstantCurve(30);
 	updater->addUpdater(new ReaperUpdater(new LifetimeReaper()));
 	updater->addUpdater(new PhysicsUpdater());
 	updater->addUpdater(new ConstantForceUpdater(gravity));
 	//updater->addUpdater(new OriginDistanceColorUpdater(targetColor,0,30));
-	//updater->addUpdater(new LifetimeColorUpdater(targetColor, 0, 12));
+	updater->addUpdater(new LifetimeColorUpdater(targetColor, 0, 30));
 	updater->addUpdater(new LifetimeUpdater(timer));
+	//updater->addUpdater(new AlphaFader(false,true));
 
+//	initializer->addInitializer(new RandomAlphaInitializer(1,122));
 	initializer->addInitializer(new OffsetInitializer(&offset));
-	initializer->addInitializer(new ExplosionVelocityInitializer(&zero, 1));
-	initializer->addInitializer(new EmitterInitializer(new EmitterWithinSphere(zero, 3)));
+	initializer->addInitializer(new ExplosionVelocityInitializer(&origin, 1.5));
+	initializer->addInitializer(new EmitterInitializer(new EmitterWithinSphere(zero, 1)));
 	initializer->addInitializer(new FooColorInit(initColor));
 	initializer->addInitializer(new LifetimeUpdater(timer));
 	initializer->addInitializer(new LifetimeInitializer(130));
@@ -112,7 +115,7 @@ int main(int argc, char **argv) {
 	StringBitmap bmp = StringBitmap(width + 1, 22);
 	ParticleRenderer<StandardParticle>* renderer = new ASCIIRenderer(&bmp);
 
-	bool right;
+	bool right= true, moving = false;
 	for(int i = 0; i < width * 4; i++) {
 		timer->setTime(i);
 		//engine->step();
@@ -122,13 +125,15 @@ int main(int argc, char **argv) {
 		if(offset[0] >= width) right = false;
 		else if(offset[0] <= 0) right = true;
 
-		if(right) {
-			offset[0]++;
-			origin[0]++;
-		}
-		else {
-			offset[0]--;
-			origin[0]--;
+		if(moving) {
+			if(right) {
+				offset[0]++;
+				//origin[0]++;
+			}
+			else {
+				offset[0]--;
+				//origin[0]--;
+			}
 		}
 
 		ParticleIterator<StandardParticle>* iter = system->getLivingParticles();
@@ -138,7 +143,7 @@ int main(int argc, char **argv) {
 		bmp.printBitmap();
 		bmp.clear();
 		printf("-----------------------------------------\n");
-		usleep(100000);
+		usleep(1000000 / 10);
 	}
 
 
