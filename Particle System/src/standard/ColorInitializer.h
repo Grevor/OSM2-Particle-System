@@ -18,22 +18,32 @@ class ColorInitializer : public ParticleInitializer<StandardParticle>{
 	const Vector3f* ColorVectorMin, ColorVectorMax, ColorVector;
 
 public:
-	Vector3f ColorInitializer(const Vector3f* ColorMin, const Vector3f* ColorMax){
-		ColorVectorMin = ColorMin;
-		ColorVectorMax = ColorMax;
-		ColorVector = NULL;
-		if((ColorMin[0]<= ColorMax[0]) && (ColorMin[1] <= ColorMax[1]) && (ColorMin[2] <= ColorMax[2])){
+	void initParticle(StandardParticle* part) override{
+		this->ColorVector = part->render.color;
+
+
+	}
+	ColorInitializer(StandardParticle* part, const Vector3f* min, const Vector3f* max){
+		this->ColorVector = part->render.color;
+		this->ColorVectorMin = min;
+		this->ColorVectorMax = max;
+		srand(time(NULL));
+	}
+
+	Vector3f* ColorInit(){
+		if((ColorVectorMin[0]<= ColorVectorMax[0]) && (ColorVectorMin[1] <= ColorVectorMax[1]) && (ColorVectorMin[2] <= ColorVectorMax[2])){
 			for(int i = 0; i < 3; i++){
-			float random = ((float) rand()) / ColorMax[i];
-			float range = ColorMax[i]-ColorMin[i];
-			ColorVector[i] = (random*range) + ColorMin[i];
-			srand(time(NULL));
+			float random = ((float) rand()) / ColorVectorMax[i];
+			float range = ColorVectorMax[i]-ColorVectorMin[i];
+			ColorVector[i] = (random*range) + ColorVectorMin[i];
 			}
 		}
 		return ColorVector;
 	}
-	ParticleInitializer(){}
-}
+
+
+
+};
 
 
 #endif /* COLORINITIALIZER_H_ */
