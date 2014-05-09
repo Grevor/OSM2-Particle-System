@@ -44,7 +44,7 @@
 //#include "RandomAlphaInitializer.hpp"
 //#include "AlphaFadeUpdater.hpp"
 #include "StandardGLRenderer.hpp"
-#define FPS 10
+#define FPS 1000
 #define Width 1336
 #define Height 768
 
@@ -54,6 +54,8 @@
 
 using namespace Particle;
 using namespace Curves;
+
+static float rotationz = 0, rotationx = 0;
 
 void printVector(Vector3f vec) {
 	printf("(%f, %f, %f)", vec[0], vec[1], vec[2]);
@@ -75,45 +77,70 @@ ParticleSystem<StandardParticle>* createFountain(Timer<float>* timer) {
 	//StandardTimer timer = StandardTimer();
 
 	Vector3f offset {0, 0 ,0};
-	Vector3f origin {0, -1, 0};
+	Vector3f origin {0, -9, 0};
 	Vector3f pos {3, 4, 0};
 	Vector3f gravity {0, -.1, 0};
 	Vector3f targetColor {0, 0, 1};
 	Vector3f initColor {0, 0, .3};
 	Vector3f zero {0, 0, 0};
-	Vector3f size {1,1,1};
+	Vector3f size {.3,.3,.3};
 
 	//FixedTimer<float>* timer = new FixedTimer<float>(0);
 
 	MultiUpdater<StandardParticle>* updater = new MultiUpdater<StandardParticle>(true);
 	MultiInitializer<StandardParticle>* initializer = new MultiInitializer<StandardParticle>();
-	Curve<long,long>* spawnCurve = new ConstantCurve(30);
+	Curve<long,long>* spawnCurve = new ConstantCurve(90);
 	updater->addUpdater(new ReaperUpdater(new LifetimeReaper()));
 	updater->addUpdater(new PhysicsUpdater());
 	updater->addUpdater(new ConstantForceUpdater(gravity));
 	//updater->addUpdater(new OriginDistanceColorUpdater(targetColor,0,30));
-	updater->addUpdater(new LifetimeColorUpdater(targetColor, 0, 30));
+	updater->addUpdater(new LifetimeColorUpdater(targetColor, 45, 70));
 	updater->addUpdater(new LifetimeUpdater(timer));
 	//updater->addUpdater(new AlphaFader(false,true));
 
-//	initializer->addInitializer(new RandomAlphaInitializer(1,122));
+	//initializer->addInitializer(new RandomAlphaInitializer(1,122));
 	//initializer->addInitializer(new OffsetInitializer(&offset));
 	initializer->addInitializer(new ExplosionVelocityInitializer(origin, 2.4));
-	initializer->addInitializer(new EmitterInitializer(new EmitterWithinSphere(zero, 1)));
+	initializer->addInitializer(new EmitterInitializer(new EmitterWithinSphere(zero, .7)));
 	initializer->addInitializer(new FooColorInit(initColor));
 	initializer->addInitializer(new LifetimeUpdater(timer));
-	initializer->addInitializer(new LifetimeInitializer(30));
+	initializer->addInitializer(new LifetimeInitializer(70));
 	initializer->addInitializer(new SizeInitializer(size));
 	initializer->addInitializer(new ZeroInitializer<StandardParticle>());
 
 	return new ParticleSystem<StandardParticle>(
-			new NaiveParticlePool<StandardParticle>(4000), initializer, updater, spawnCurve, false);
+			new NaiveParticlePool<StandardParticle>(8000), initializer, updater, spawnCurve, false);
 
 }
 
 void error_callback(int error, const char* description)
 {
 	cerr << description << endl;
+}
+
+static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	float delta = 8;
+	switch(key) {
+	case GLFW_KEY_UP:
+		rotationz += delta;
+		break;
+	case GLFW_KEY_DOWN:
+		rotationz -= delta;
+		break;
+	case GLFW_KEY_LEFT:
+		rotationx += delta;
+		break;
+	case GLFW_KEY_RIGHT:
+		rotationx -= delta;
+		break;
+	case GLFW_KEY_SPACE:
+		rotationx = 0;
+		rotationz = 0;
+		break;
+	default:
+		break;
+	}
 }
 
 int main(int argc, char **argv) {
@@ -124,6 +151,7 @@ int main(int argc, char **argv) {
 	}
 	glfwSetErrorCallback(&error_callback);
 	GLFWwindow* window = glfwCreateWindow(1366,768,"Demo fountain", NULL, NULL);
+	glfwSetKeyCallback(window, key_callback);
 	glfwMakeContextCurrent(window);
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
@@ -149,6 +177,8 @@ int main(int argc, char **argv) {
 		gluLookAt(100,0,0,
 				0,0,0,
 				0,1,0);
+		glRotatef(rotationx,1,0,0);
+		glRotatef(rotationz,0,0,1);
 
 		while(true) {
 			StandardParticle* part;
@@ -160,7 +190,7 @@ int main(int argc, char **argv) {
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
-		usleep(1000000 / FPS);
+		//usleep(1000000 / FPS);
 	}
 
 	glfwDestroyWindow(window);
