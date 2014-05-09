@@ -10,14 +10,16 @@
 
 #include "ParticlePool.h"
 #include <boost/atomic/atomic.hpp>
+#include <boost/interprocess/sync/interprocess_mutex.hpp>
 #include <atomic>
-#include <mutex>
 #include <stddef.h>
 #include <stdlib.h>
 using namespace std;
 
 #define PTR_ADD(p,a) (((char*)p) + (a))
 #define PTR_SUB(p,a) (((char*)p) - (a))
+
+using boost::interprocess::interprocess_mutex;
 
 template<typename Particle>
 class NaiveParticlePool: public ParticlePool<Particle> {
@@ -37,7 +39,7 @@ class NaiveParticlePool: public ParticlePool<Particle> {
 	//boost::mutex livingIteratorCreationMutex;
 	volatile atomic<int64_t> numLivingIterator;
 	volatile atomic<int64_t> numLiving;
-	pthread_mutex_t livingMutex;
+	interprocess_mutex* livingIteratorCreationMutex;
 
 public:
 	NaiveParticlePool(int poolSize) {
@@ -56,7 +58,7 @@ public:
 			n->next = freelist;
 			freelist = n;
 		}
-		pthread_mutex_init(&livingMutex,NULL);
+		livingIteratorCreationMutex = new interprocess_mutex();
 	}
 
 	virtual ~NaiveParticlePool() {
@@ -169,6 +171,11 @@ public:
 				return NULL;
 			}
 
+			/**
+			 * Gets the next living particle in a thread-safe manner.
+			 * [NOT WORKING]
+			 * @return
+			 */
 			Particle* livingNextM() {
 				Node desired, expected;
 				while(true) {
@@ -218,9 +225,9 @@ public:
 	}
 
 	ParticleIterator<Particle>* getLivingIterator() {
-		pthread_mutex_lock(&livingMutex);
+		livingIteratorCreationMutex->lock();
 		ParticleIterator<Particle>* iter = new LivingIterator(&this->updated, NULL, &this->living, this);
-		pthread_mutex_unlock(&livingMutex);
+		livingIteratorCreationMutex->unlock();
 		return iter;
 	}
 
@@ -257,16 +264,12 @@ public:
 	}
 
 	virtual void stepComplete() override {
-		//haltIteratorCreation();
-		pthread_mutex_lock(&livingMutex);
+		livingIteratorCreationMutex->lock();
 		waitForLivingIterators();
-		//this->living = this->done;
-		//append(&this->living, &this->updated);
 		this->living = this->updated;
 		this->updated = NULL;
 		this->done = NULL;
-		pthread_mutex_unlock(&livingMutex);
-		//resumeIteratorCreation();
+		livingIteratorCreationMutex->unlock();
 	}
 
 	virtual int size() override {
