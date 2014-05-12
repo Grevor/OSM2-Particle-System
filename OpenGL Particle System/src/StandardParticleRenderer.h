@@ -13,6 +13,7 @@
 #include "Camera.hpp"
 #include "Particle.hpp"
 #include "ParticleSystem.h"
+#include "texture.hpp"
 
 class StandardParticleRenderer {
 	Camera* camera;
@@ -27,6 +28,11 @@ class StandardParticleRenderer {
 	GLuint cameraRightWorldspaceID;
 	GLuint cameraUpWorldspaceID;
 	GLuint viewProjMatrixID;
+
+	GLuint texture;
+	GLuint textureID;
+	GLfloat textureBlend; //0 = texture, 1 = no texture
+	GLuint textureBlendID;
 public:
 	GLfloat* g_particle_position_size_data;
 	GLubyte* g_particle_color_data;
@@ -35,6 +41,7 @@ public:
 	StandardParticleRenderer(int maxParticles, Camera* camera);
 	StandardParticleRenderer(ParticleSystem<Particle>* particleSystem, Camera* camera);
 	virtual ~StandardParticleRenderer();
+	void setTexture(GLuint textureHandle);
 	/**
 	 * Fills gpu buffers with particles from the currently set particle system and renders them.
 	 */

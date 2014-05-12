@@ -30,17 +30,19 @@ StandardParticleRenderer::StandardParticleRenderer(int maxParticles, Camera* cam
 {
 	this->maxParticles = maxParticles;
 	this->camera = camera;
-
 	initGLBuffers();
 	initGLShaderProgram();
+	setTexture(loadDDS("resources\\particle.DDS"));
 }
 
-StandardParticleRenderer::StandardParticleRenderer(ParticleSystem<Particle>* particleSystem, Camera* camera) {
+StandardParticleRenderer::StandardParticleRenderer(ParticleSystem<Particle>* particleSystem, Camera* camera) :
+	StandardParticleRenderer(particleSystem->getMaxSize(), camera)
+{
 	this->particleSystem = particleSystem;
-	this->maxParticles = particleSystem->getMaxSize();
+/*	this->maxParticles = particleSystem->getMaxSize();
 	this->camera = camera;
 	initGLBuffers();
-	initGLShaderProgram();
+	initGLShaderProgram();*/
 }
 
 StandardParticleRenderer::~StandardParticleRenderer()
@@ -51,8 +53,17 @@ StandardParticleRenderer::~StandardParticleRenderer()
 	glDeleteBuffers(1, &particles_position_buffer);
 	glDeleteBuffers(1, &billboard_vertex_buffer);
 	glDeleteProgram(programID);
-	//glDeleteTextures(1, &Texture);
-	//glDeleteBuffers(1, &vertexbuffer);
+	//glDeleteTextures(1, &texture);
+}
+
+void StandardParticleRenderer::setTexture(GLuint textureHandle) {
+	texture = textureHandle;
+	if (texture == 0) {
+		textureBlend = 1;
+	}
+	else {
+		textureBlend = 0;
+	}
 }
 
 void StandardParticleRenderer::render() {
@@ -76,10 +87,11 @@ void StandardParticleRenderer::render(int nParticles) {
 	glUseProgram(programID);
 
 	// Bind our texture in Texture Unit 0
-	//glActiveTexture(GL_TEXTURE0);
-	//glBindTexture(GL_TEXTURE_2D, Texture);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture);
 	// Set our "myTextureSampler" sampler to user Texture Unit 0
-	//glUniform1i(TextureID, 0);
+	glUniform1i(textureID, 0);
+	glUniform1f(textureBlendID, textureBlend);
 
 	glm::mat4 viewMatrix = camera->getViewMatrix();
 	glm::mat4 viewProjectionMatrix = camera->getProjectionMatrix() * viewMatrix;
@@ -208,9 +220,12 @@ void StandardParticleRenderer::initGLShaderProgram() {
 			"src\\Particle.vertexshader",
 			"src\\Particle.fragmentshader" );
 
-	cameraRightWorldspaceID  = glGetUniformLocation(programID, "CameraRight_worldspace");
-	cameraUpWorldspaceID  = glGetUniformLocation(programID, "CameraUp_worldspace");
+	cameraRightWorldspaceID  = glGetUniformLocation(programID, "cameraRightWorldSpace");
+	cameraUpWorldspaceID  = glGetUniformLocation(programID, "cameraUpWorldSpace");
 	viewProjMatrixID = glGetUniformLocation(programID, "VP");
+
+	textureID = glGetUniformLocation(programID, "textureSampler");
+	textureBlendID = glGetUniformLocation(programID, "textureBlend");
 }
 
 // Fill the GPU buffer
