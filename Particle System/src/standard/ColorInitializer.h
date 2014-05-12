@@ -23,6 +23,7 @@ public:
 
 
 	}
+
 	ColorInitializer(StandardParticle* part, const Vector3f* min, const Vector3f* max){
 		this->ColorVector = part->render.color;
 		this->ColorVectorMin = min;
