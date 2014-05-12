@@ -33,3 +33,4 @@ depend
 
 # Locally stored "Eclipse launch configurations"
 *.launch
+.settings
