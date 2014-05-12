@@ -40,6 +40,7 @@ public:
 	StandardParticleRenderer() = delete;
 	StandardParticleRenderer(int maxParticles, Camera* camera);
 	StandardParticleRenderer(ParticleSystem<Particle>* particleSystem, Camera* camera);
+	StandardParticleRenderer(ParticleSystem<Particle>* particleSystem, Camera* camera, GLuint texture);
 	virtual ~StandardParticleRenderer();
 	void setTexture(GLuint textureHandle);
 	/**
@@ -56,6 +57,7 @@ private:
 	int fillGLBuffers();
 	void initGLBuffers();
 	void initGLShaderProgram();
+	void init(int maxParticles, Camera* camera, GLuint texture);
 };
 
 #endif /* STANDARDPARTICLERENDERER_H_ */

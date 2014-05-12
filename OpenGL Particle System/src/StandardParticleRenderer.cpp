@@ -26,13 +26,17 @@ static const GLfloat g_vertex_buffer_data[3*4] = {
 			0.5f,  0.5f, 0.0f,
 	};
 
-StandardParticleRenderer::StandardParticleRenderer(int maxParticles, Camera* camera)
-{
+void StandardParticleRenderer::init(int maxParticles, Camera* camera, GLuint texture) {
 	this->maxParticles = maxParticles;
 	this->camera = camera;
 	initGLBuffers();
 	initGLShaderProgram();
-	setTexture(loadDDS("resources\\particle.DDS"));
+	setTexture(texture);
+}
+
+StandardParticleRenderer::StandardParticleRenderer(int maxParticles, Camera* camera)
+{
+	init(maxParticles, camera, 0);
 }
 
 StandardParticleRenderer::StandardParticleRenderer(ParticleSystem<Particle>* particleSystem, Camera* camera) :
@@ -43,6 +47,12 @@ StandardParticleRenderer::StandardParticleRenderer(ParticleSystem<Particle>* par
 	this->camera = camera;
 	initGLBuffers();
 	initGLShaderProgram();*/
+}
+
+StandardParticleRenderer::StandardParticleRenderer(ParticleSystem<Particle>* particleSystem, Camera* camera, GLuint texture) :
+	StandardParticleRenderer(particleSystem,camera)
+{
+	setTexture(texture);
 }
 
 StandardParticleRenderer::~StandardParticleRenderer()

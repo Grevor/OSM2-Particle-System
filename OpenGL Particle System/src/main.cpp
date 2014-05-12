@@ -26,6 +26,7 @@
 #include "Initializer.hpp"
 #include "NaiveParticlePool.h"
 //#include "ParticleEngine.h"
+#include "texture.hpp"
 
 using namespace glm;
 using namespace std;
@@ -51,12 +52,13 @@ int lastUsedParticle = 0;
 
 GLFWwindow* window;
 Camera* mainCamera;
+StandardParticleRenderer* renderer;
 int width = 800;
 int height = 600;
 float angleDelta = .1, posDelta = .5;
 float terrainSize = 100;
 
-static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	switch(key) {
 	case GLFW_KEY_UP:
@@ -89,9 +91,20 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 	case GLFW_KEY_A:
 		mainCamera->move(0,-posDelta,0,0,0);
 		break;
+	case GLFW_KEY_0:
+		renderer->setTexture(0);
+		break;
+	case GLFW_KEY_1:
+		renderer->setTexture(1);
+		break;
 	default:
 		break;
 	}
+}
+
+void resizeCallback(GLFWwindow* win, int width, int height) {
+	glViewport(0,0,width,height);
+	mainCamera->setAspectRatio((float)width/height);
 }
 
 int findUnusedParticle(){
@@ -238,10 +251,15 @@ int main(void) {
 		return -1;
 	}
 
-	glfwSetKeyCallback(window, key_callback);
+	glfwSetKeyCallback(window, keyCallback);
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
+	glfwSetWindowSizeCallback(window, resizeCallback);
 	/* Make the window's context current */
 	glfwMakeContextCurrent(window);
+
+	const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+	glfwSetWindowSize(window, mode->width-6,mode->height-60);
+	glfwSetWindowPos(window,0,25);
 
 	// Initialize GLEW
 	glewExperimental = true; // Needed for core profile
@@ -265,13 +283,14 @@ int main(void) {
 
 	mainCamera = new Camera();
 
+	GLuint particleTexture1 = loadDDS("resources\\particle.DDS");
 
 	StandardUpdater* updater = new StandardUpdater(mainCamera,glfwGetTime());
 	ParticleInitializer<Particle>* init = new StandardParticleInitializer(vec3(0,0,0));
 	ParticlePool<Particle>* pool = new NaiveParticlePool<Particle>(maxParticles);
 	Curve<long,long>* spawnCurve = new TimeCurve(glfwGetTime(),1000/60,1000);
 	ParticleSystem<Particle>* particleSystem = new ParticleSystem<Particle>(pool,init,updater,spawnCurve,false);
-	StandardParticleRenderer* renderer = new StandardParticleRenderer(particleSystem, mainCamera);
+	renderer = new StandardParticleRenderer(particleSystem, mainCamera, particleTexture1);
 
 	//ParticleEngine* particleEngine = new ParticleEngine();
 	//particleEngine->addParticleSystem(particleSystem);
@@ -310,6 +329,7 @@ int main(void) {
 
 	delete mainCamera;
 	glDeleteVertexArrays(1, &VertexArrayID);
+	glDeleteTextures(1,&particleTexture1);
 	glfwTerminate();
 
 	return 0;
