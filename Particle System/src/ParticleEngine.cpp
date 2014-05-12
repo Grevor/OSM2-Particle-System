@@ -11,7 +11,7 @@
 
 ParticleEngine::ParticleEngine() : ParticleEngine(boost::thread::hardware_concurrency()) {}
 
-ParticleEngine::ParticleEngine(int numThreads) {
+ParticleEngine::ParticleEngine(int numThreads) : taskSemaphore(0) {
 	if (numThreads < 1)
 		throw std::invalid_argument("Too few threads: " + numThreads);
 	this->isRunning = true;
@@ -25,13 +25,13 @@ ParticleEngine::ParticleEngine(int numThreads) {
 
 ParticleEngine::~ParticleEngine() {
 	this->stop();
-	delete threads;
-	delete particleSystems;
+	//delete threads;
+	//delete particleSystems;
 }
 
 void ParticleEngine::step() {
-	std::list<IterationUpdateable*>::iterator iter = particleSystems.begin();
-	taskIter(iter);
+	typename std::list<IterationUpdateable*>::iterator iter = particleSystems.begin();
+	taskIter = std::list<IterationUpdateable*>::iterator(iter);
 	int newTaskCount = 0;
 	while (iter != particleSystems.end()) {
 		(*iter)->step();

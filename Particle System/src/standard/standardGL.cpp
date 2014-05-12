@@ -44,7 +44,9 @@
 //#include "RandomAlphaInitializer.hpp"
 //#include "AlphaFadeUpdater.hpp"
 #include "StandardGLRenderer.hpp"
-#define FPS 1000
+
+#include "../ParticleEngine.h"
+#define FPS 30
 #define Width 1336
 #define Height 768
 
@@ -101,7 +103,7 @@ ParticleSystem<StandardParticle>* createFountain(Timer<float>* timer) {
 	//initializer->addInitializer(new RandomAlphaInitializer(1,122));
 	//initializer->addInitializer(new OffsetInitializer(&offset));
 	initializer->addInitializer(new ExplosionVelocityInitializer(origin, 2.4));
-	initializer->addInitializer(new EmitterInitializer(new EmitterWithinSphere(zero, .7)));
+	initializer->addInitializer(new EmitterInitializer(new EmitterWithinSphere(zero, 1)));
 	initializer->addInitializer(new FooColorInit(initColor));
 	initializer->addInitializer(new LifetimeUpdater(timer));
 	initializer->addInitializer(new LifetimeInitializer(70));
@@ -162,10 +164,13 @@ int main(int argc, char **argv) {
 	FixedTimer<float>* timer = new FixedTimer<float>(0);
 	ParticleSystem<StandardParticle>* system = createFountain(timer);
 	StandardGLRenderer* renderer = new StandardGLRenderer();
+	ParticleEngine* engine = new ParticleEngine(5);
+	engine->addParticleSystem(system);
 
 	while(!glfwWindowShouldClose(window)) {
-		system->step();
-		system->update();
+		//system->step();
+		//system->update();
+		engine->step();
 		timer->setTime(timer->getTime() + 1);
 		ParticleIterator<StandardParticle>* iter = system->getLivingParticles();
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);

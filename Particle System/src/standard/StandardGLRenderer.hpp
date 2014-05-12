@@ -17,6 +17,7 @@ class StandardGLRenderer : public ParticleRenderer<StandardParticle> {
 public:
 	StandardGLRenderer() {
 		quad = gluNewQuadric();
+		//gluQuadricTexture(quad,true);
 	}
 
 	void renderParticle(StandardParticle* particle) {
