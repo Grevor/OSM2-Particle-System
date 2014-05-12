@@ -20,12 +20,13 @@
 #include "Camera.hpp"
 #include "shader.hpp"
 #include "StandardParticleRenderer.h"
+#include "Particle.hpp"
 
 using namespace glm;
 using namespace std;
 
 // CPU representation of a particle
-struct Particle{
+/*struct Particle{
 	glm::vec3 pos, speed;
 	unsigned char r,g,b,a; // Color
 	float size, angle, weight;
@@ -36,7 +37,7 @@ struct Particle{
 		// Sort in reverse order : far particles drawn first.
 		return this->cameradistance > that.cameradistance;
 	}
-};
+};*/
 
 
 const int maxParticles = 10000;
@@ -201,7 +202,7 @@ int main(void) {
 	//glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	/* Create a windowed mode window and its OpenGL context */
-	window = glfwCreateWindow(width, height, "Hello World", NULL, NULL);
+	window = glfwCreateWindow(width, height, "Particle System Demo", NULL, NULL);
 	if (!window) {
 		fprintf( stderr,
 				"Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible.\n");
@@ -252,7 +253,7 @@ int main(void) {
 
 		spawnParticles(delta);
 
-		int nLivingParticles = updateParticles(delta, cameraPosition, renderer->g_particule_position_size_data, renderer->g_particule_color_data);
+		int nLivingParticles = updateParticles(delta, cameraPosition, renderer->g_particle_position_size_data, renderer->g_particle_color_data);
 
 		sortParticles();
 
