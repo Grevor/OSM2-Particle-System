@@ -11,11 +11,13 @@
 //#include <src/core/ParticleRenderer.h>
 #include <GL/gl.h>
 #include "Camera.hpp"
+#include "Particle.hpp"
+#include "ParticleSystem.h"
 
 class StandardParticleRenderer {
 	Camera* camera;
 	int maxParticles;
-	//ParticleSystem<>
+	ParticleSystem<Particle>* particleSystem;
 
 	GLuint billboard_vertex_buffer;
 	GLuint particles_position_buffer;
@@ -26,13 +28,27 @@ class StandardParticleRenderer {
 	GLuint cameraUpWorldspaceID;
 	GLuint viewProjMatrixID;
 public:
-	GLfloat* g_particule_position_size_data;
-	GLubyte* g_particule_color_data;
+	GLfloat* g_particle_position_size_data;
+	GLubyte* g_particle_color_data;
 
 	StandardParticleRenderer() = delete;
 	StandardParticleRenderer(int maxParticles, Camera* camera);
+	StandardParticleRenderer(ParticleSystem<Particle>* particleSystem, Camera* camera);
 	virtual ~StandardParticleRenderer();
+	/**
+	 * Fills gpu buffers with particles from the currently set particle system and renders them.
+	 */
+	void render();
+	/**
+	 * Render a given number of particles in prefilled buffers.
+	 * @param nParticles is the number of particles to from the buffers.
+	 */
 	void render(int nParticles);
+
+private:
+	int fillGLBuffers();
+	void initGLBuffers();
+	void initGLShaderProgram();
 };
 
 #endif /* STANDARDPARTICLERENDERER_H_ */

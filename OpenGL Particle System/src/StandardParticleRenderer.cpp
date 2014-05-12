@@ -8,6 +8,14 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <algorithm>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/norm.hpp>
+
 #include "StandardParticleRenderer.h"
 #include "shader.hpp"
 
@@ -22,39 +30,23 @@ StandardParticleRenderer::StandardParticleRenderer(int maxParticles, Camera* cam
 {
 	this->maxParticles = maxParticles;
 	this->camera = camera;
-	g_particule_position_size_data = new GLfloat[maxParticles * 4];
-	g_particule_color_data         = new GLubyte[maxParticles * 4];
 
+	initGLBuffers();
+	initGLShaderProgram();
+}
 
-	glGenBuffers(1, &billboard_vertex_buffer);
-	glBindBuffer(GL_ARRAY_BUFFER, billboard_vertex_buffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
-
-	// The VBO containing the positions and sizes of the particles
-	glGenBuffers(1, &particles_position_buffer);
-	glBindBuffer(GL_ARRAY_BUFFER, particles_position_buffer);
-	// Initialize with empty (NULL) buffer : it will be updated later, each frame.
-	glBufferData(GL_ARRAY_BUFFER, maxParticles * 4 * sizeof(GLfloat), NULL, GL_STREAM_DRAW);
-
-	// The VBO containing the colors of the particles
-	glGenBuffers(1, &particles_color_buffer);
-	glBindBuffer(GL_ARRAY_BUFFER, particles_color_buffer);
-	// Initialize with empty (NULL) buffer : it will be updated later, each frame.
-	glBufferData(GL_ARRAY_BUFFER, maxParticles * 4 * sizeof(GLubyte), NULL, GL_STREAM_DRAW);
-
-	programID = loadShaders(
-				"src\\Particle.vertexshader",
-				"src\\Particle.fragmentshader" );
-
-	cameraRightWorldspaceID  = glGetUniformLocation(programID, "CameraRight_worldspace");
-	cameraUpWorldspaceID  = glGetUniformLocation(programID, "CameraUp_worldspace");
-	viewProjMatrixID = glGetUniformLocation(programID, "VP");
+StandardParticleRenderer::StandardParticleRenderer(ParticleSystem<Particle>* particleSystem, Camera* camera) {
+	this->particleSystem = particleSystem;
+	this->maxParticles = particleSystem->getMaxSize();
+	this->camera = camera;
+	initGLBuffers();
+	initGLShaderProgram();
 }
 
 StandardParticleRenderer::~StandardParticleRenderer()
 {
-	delete[] g_particule_position_size_data;
-	delete[] g_particule_color_data;
+	delete[] g_particle_position_size_data;
+	delete[] g_particle_color_data;
 	glDeleteBuffers(1, &particles_color_buffer);
 	glDeleteBuffers(1, &particles_position_buffer);
 	glDeleteBuffers(1, &billboard_vertex_buffer);
@@ -63,14 +55,19 @@ StandardParticleRenderer::~StandardParticleRenderer()
 	//glDeleteBuffers(1, &vertexbuffer);
 }
 
+void StandardParticleRenderer::render() {
+	int nParticles = fillGLBuffers();
+	render(nParticles);
+}
+
 void StandardParticleRenderer::render(int nParticles) {
 	glBindBuffer(GL_ARRAY_BUFFER, particles_position_buffer);
 	glBufferData(GL_ARRAY_BUFFER, maxParticles * 4 * sizeof(GLfloat), NULL, GL_STREAM_DRAW); // Buffer orphaning, a common way to improve streaming perf. See above link for details.
-	glBufferSubData(GL_ARRAY_BUFFER, 0, nParticles * sizeof(GLfloat) * 4, g_particule_position_size_data);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, nParticles * sizeof(GLfloat) * 4, g_particle_position_size_data);
 
 	glBindBuffer(GL_ARRAY_BUFFER, particles_color_buffer);
 	glBufferData(GL_ARRAY_BUFFER, maxParticles * 4 * sizeof(GLubyte), NULL, GL_STREAM_DRAW); // Buffer orphaning, a common way to improve streaming perf. See above link for details.
-	glBufferSubData(GL_ARRAY_BUFFER, 0, nParticles * sizeof(GLubyte) * 4, g_particule_color_data);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, nParticles * sizeof(GLubyte) * 4, g_particle_color_data);
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -147,3 +144,84 @@ void StandardParticleRenderer::render(int nParticles) {
 	glDisableVertexAttribArray(2);
 }
 
+struct ParticleSortStruct {
+	float distSq;
+	Particle* particle;
+
+	bool operator<(const ParticleSortStruct& that) const {
+		// Sort in reverse order : far particles drawn first.
+		return this->distSq > that.distSq;
+	}
+};
+
+int StandardParticleRenderer::fillGLBuffers() {
+	ParticleSortStruct particles[maxParticles];
+	ParticleIterator<Particle>* iter = particleSystem->getLivingParticles();
+	vec3 camPos = camera->getPosition();
+	int nParticles = 0;
+	while(iter->hasNext()) {
+		particles[nParticles].particle = iter->next();
+		particles[nParticles].distSq = glm::length2(particles[nParticles].particle->pos - camPos);
+		nParticles++;
+	}
+	std::sort(&particles[0], &particles[nParticles]);
+	for (int i = 0; i < nParticles; ++i) {
+		Particle p = *(particles[i].particle);
+		g_particle_position_size_data[4*i+0] = p.pos.x;
+		g_particle_position_size_data[4*i+1] = p.pos.y;
+		g_particle_position_size_data[4*i+2] = p.pos.z;
+
+		g_particle_position_size_data[4*i+3] = p.size;
+
+		g_particle_color_data[4*i+0] = p.r;
+		g_particle_color_data[4*i+1] = p.g;
+		g_particle_color_data[4*i+2] = p.b;
+		g_particle_color_data[4*i+3] = p.a;
+	}
+	delete iter;
+	return nParticles;
+}
+
+void StandardParticleRenderer::initGLBuffers() {
+	g_particle_position_size_data = new GLfloat[maxParticles * 4];
+	g_particle_color_data         = new GLubyte[maxParticles * 4];
+
+	glGenBuffers(1, &billboard_vertex_buffer);
+	glBindBuffer(GL_ARRAY_BUFFER, billboard_vertex_buffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
+
+	// The VBO containing the positions and sizes of the particles
+	glGenBuffers(1, &particles_position_buffer);
+	glBindBuffer(GL_ARRAY_BUFFER, particles_position_buffer);
+	// Initialize with empty (NULL) buffer : it will be updated later, each frame.
+	glBufferData(GL_ARRAY_BUFFER, maxParticles * 4 * sizeof(GLfloat), NULL, GL_STREAM_DRAW);
+
+	// The VBO containing the colors of the particles
+	glGenBuffers(1, &particles_color_buffer);
+	glBindBuffer(GL_ARRAY_BUFFER, particles_color_buffer);
+	// Initialize with empty (NULL) buffer : it will be updated later, each frame.
+	glBufferData(GL_ARRAY_BUFFER, maxParticles * 4 * sizeof(GLubyte), NULL, GL_STREAM_DRAW);
+}
+
+void StandardParticleRenderer::initGLShaderProgram() {
+	programID = loadShaders(
+			"src\\Particle.vertexshader",
+			"src\\Particle.fragmentshader" );
+
+	cameraRightWorldspaceID  = glGetUniformLocation(programID, "CameraRight_worldspace");
+	cameraUpWorldspaceID  = glGetUniformLocation(programID, "CameraUp_worldspace");
+	viewProjMatrixID = glGetUniformLocation(programID, "VP");
+}
+
+// Fill the GPU buffer
+/*
+g_particule_position_size_data[4*particlesCount+0] = p.pos.x;
+g_particule_position_size_data[4*particlesCount+1] = p.pos.y;
+g_particule_position_size_data[4*particlesCount+2] = p.pos.z;
+
+g_particule_position_size_data[4*particlesCount+3] = p.size;
+
+g_particule_color_data[4*particlesCount+0] = p.r;
+g_particule_color_data[4*particlesCount+1] = p.g;
+g_particule_color_data[4*particlesCount+2] = p.b;
+g_particule_color_data[4*particlesCount+3] = p.a;*/
