@@ -37,13 +37,57 @@ struct Particle{
 	}
 };
 
+
+
+
+
 const int maxParticles = 10000;
 Particle particlesContainer[maxParticles];
 int lastUsedParticle = 0;
 
 GLFWwindow* window;
+Camera* mainCamera;
 int width = 800;
 int height = 600;
+float angleDelta = .1, posDelta = .1;
+
+static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	switch(key) {
+	case GLFW_KEY_UP:
+		mainCamera->move(0,0,0,angleDelta,0);
+		break;
+	case GLFW_KEY_DOWN:
+		mainCamera->move(0,0,0,-angleDelta,0);
+		break;
+	case GLFW_KEY_LEFT:
+		mainCamera->move(0,0,0,0,angleDelta);
+		break;
+	case GLFW_KEY_RIGHT:
+		mainCamera->move(0,0,0,0,-angleDelta);
+		break;
+	case GLFW_KEY_SPACE:
+		mainCamera->move(0,0,posDelta,0,0);
+		break;
+	case GLFW_KEY_LEFT_CONTROL:
+		mainCamera->move(0,0,-posDelta,0,0);
+		break;
+	case GLFW_KEY_W:
+		mainCamera->move(posDelta,0,0,0,0);
+		break;
+	case GLFW_KEY_S:
+		mainCamera->move(-posDelta,0,0,0,0);
+		break;
+	case GLFW_KEY_D:
+		mainCamera->move(0,posDelta,0,0,0);
+		break;
+	case GLFW_KEY_A:
+		mainCamera->move(0,-posDelta,0,0,0);
+		break;
+	default:
+		break;
+	}
+}
 
 int findUnusedParticle(){
 	for(int i=lastUsedParticle; i<maxParticles; i++){
@@ -144,10 +188,11 @@ int main(void) {
 		fprintf( stderr, "Failed to initialize GLFW\n");
 		return -1;
 	}
-	glfwWindowHint(GLFW_SAMPLES, 4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+	//glfwWindowHint(GLFW_SAMPLES, 4);
+	//glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	//glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	//glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	/* Create a windowed mode window and its OpenGL context */
 	window = glfwCreateWindow(width, height, "Hello World", NULL, NULL);
@@ -158,6 +203,7 @@ int main(void) {
 		return -1;
 	}
 
+	glfwSetKeyCallback(window, key_callback);
 	/* Make the window's context current */
 	glfwMakeContextCurrent(window);
 
@@ -167,6 +213,8 @@ int main(void) {
 		fprintf(stderr, "Failed to initialize GLEW\n");
 		return -1;
 	}
+
+	glewIsSupported("");
 
 	// Dark blue background
 	glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
@@ -235,6 +283,7 @@ int main(void) {
 	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data),	g_vertex_buffer_data, GL_STATIC_DRAW);*/
 
 	Camera* camera = new Camera();
+	mainCamera = camera;
 
 	double lastTime = glfwGetTime();
 	/* Loop until the user closes the window */
