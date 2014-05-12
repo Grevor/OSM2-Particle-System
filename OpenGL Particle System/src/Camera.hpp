@@ -29,6 +29,7 @@ public:
 	virtual ~Camera();
 	void setAspectRatio(float aspectRatio);
 	void move(float forwardAmount, float rightAmount, float upAngle, float leftAngle);
+	void move(float forward, float right, float up, float upAngle, float leftAngle);
 	vec3 getPosition();
 	mat4 getViewMatrix();
 	mat4 getProjectionMatrix();

@@ -53,6 +53,15 @@ void Camera::move(float forwardAmount, float rightAmount, float upAngle, float l
 	updateProjectionMatrix();
 }
 
+void Camera::move(float forward, float right, float up, float upAngle, float leftAngle) {
+	position += vec3(right,up,-forward);
+	static vec3 upVec = vec3(0,1,0);
+	horizontalAngle += leftAngle;
+	verticalAngle += upAngle;
+	updateViewMatrix();
+	updateProjectionMatrix();
+}
+
 void Camera::setAspectRatio(float aspectRatio) {
 	this->aspect = aspectRatio;
 	updateProjectionMatrix();
