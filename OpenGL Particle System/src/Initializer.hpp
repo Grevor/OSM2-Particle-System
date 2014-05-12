@@ -8,7 +8,7 @@
 #ifndef INITIALIZER_HPP_
 #define INITIALIZER_HPP_
 
-#include "ParticleInitializer.h"
+#include <ParticleInitializer.h>
 #include "Particle.hpp"
 #include <GL/glext.h>
 #include <glm/gtc/random.hpp>
@@ -18,7 +18,7 @@ using namespace glm;
 class StandardParticleInitializer : public ParticleInitializer<Particle> {
 	vec3 position;
 public:
-	StandardParticleInitializer(glm::vec3& pos) {
+	StandardParticleInitializer(glm::vec3 pos) {
 		position = pos;
 	}
 
@@ -31,7 +31,7 @@ public:
 				// Very bad way to generate a random direction;
 				// See for instance http://stackoverflow.com/questions/5408276/python-uniform-spherical-distribution instead,
 				// combined with some user-controlled parameters (main direction, spread, etc)
-				glm::vec3 randomdir = glm::sphericalRand(1);
+				glm::vec3 randomdir = glm::sphericalRand<float>(1);
 
 				particle->speed = maindir + randomdir*spread;
 

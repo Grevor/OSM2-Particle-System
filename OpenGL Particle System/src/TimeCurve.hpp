@@ -8,10 +8,10 @@
 #ifndef TIMECURVE_HPP_
 #define TIMECURVE_HPP_
 
-#include "Curve.h"
+#include <Curve.h>
 #include <GLFW/glfw3.h>
 
-class TimeCurve : Curve<long,long> {
+class TimeCurve : public Curve<long,long> {
 	double lastTime;
 	double maxPerStep;
 	double particlesPerSecond;
@@ -26,7 +26,7 @@ public:
 	long getValue(long unused) override {
 		(void)unused;
 		double time = glfwGetTime();
-		double delta = time -lastTime;
+		double delta = time - lastTime;
 		lastTime = time;
 
 		long ans = delta * particlesPerSecond;

@@ -21,6 +21,11 @@
 #include "shader.hpp"
 #include "StandardParticleRenderer.h"
 #include "Particle.hpp"
+#include "TimeCurve.hpp"
+#include "Updater.hpp"
+#include "Initializer.hpp"
+#include "NaiveParticlePool.h"
+//#include "ParticleEngine.h"
 
 using namespace glm;
 using namespace std;
@@ -189,6 +194,29 @@ void initParticles() {
 	}
 }
 
+void drawGrid() {
+	//particleEngine->step();
+	glUseProgram(0);
+	glDisable(GL_BLEND);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glm::mat4 matrix = mainCamera->getProjectionMatrix();
+	glMultMatrixf((const GLfloat*) (&matrix[0][0]));
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	matrix = mainCamera->getViewMatrix();
+	glMultMatrixf((GLfloat*) (&matrix[0][0]));
+	glBegin(GL_LINES);
+	glColor4f(1, 1, 1, .4);
+	for (float x = -terrainSize; x <= terrainSize; x += 1) {
+		glVertex3f(x, 0, terrainSize);
+		glVertex3f(x, 0, -terrainSize);
+		glVertex3f(terrainSize, 0, x);
+		glVertex3f(-terrainSize, 0, x);
+	}
+	glEnd();
+}
+
 int main(void) {
 	// Initialise GLFW
 	if (!glfwInit()) {
@@ -211,6 +239,7 @@ int main(void) {
 	}
 
 	glfwSetKeyCallback(window, key_callback);
+	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 	/* Make the window's context current */
 	glfwMakeContextCurrent(window);
 
@@ -236,49 +265,44 @@ int main(void) {
 
 	mainCamera = new Camera();
 
-	StandardParticleRenderer* renderer = new StandardParticleRenderer(maxParticles, mainCamera);
 
-	double lastTime = glfwGetTime();
+	StandardUpdater* updater = new StandardUpdater(mainCamera,glfwGetTime());
+	ParticleInitializer<Particle>* init = new StandardParticleInitializer(vec3(0,0,0));
+	ParticlePool<Particle>* pool = new NaiveParticlePool<Particle>(maxParticles);
+	Curve<long,long>* spawnCurve = new TimeCurve(glfwGetTime(),1000/60,1000);
+	ParticleSystem<Particle>* particleSystem = new ParticleSystem<Particle>(pool,init,updater,spawnCurve,false);
+	StandardParticleRenderer* renderer = new StandardParticleRenderer(particleSystem, mainCamera);
+
+	//ParticleEngine* particleEngine = new ParticleEngine();
+	//particleEngine->addParticleSystem(particleSystem);
+
+	//double lastTime = glfwGetTime();
 	/* Loop until the user closes the window */
 	while (!glfwWindowShouldClose(window))
 	{
-		double currentTime = glfwGetTime();
-		double delta = currentTime - lastTime;
-		lastTime = currentTime;
+//		double currentTime = glfwGetTime();
+//		double delta = currentTime - lastTime;
+//		lastTime = currentTime;
+		updater->setTime(glfwGetTime());
 
 		// Clear the screen
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		glm::vec3 cameraPosition = mainCamera->getPosition();
+//		glm::vec3 cameraPosition = mainCamera->getPosition();
+//
+//		spawnParticles(delta);
+//
+//		int nLivingParticles = updateParticles(delta, cameraPosition, renderer->g_particle_position_size_data, renderer->g_particle_color_data);
+//
+//		sortParticles();
 
-		spawnParticles(delta);
+		particleSystem->step();
+		particleSystem->update();
 
-		int nLivingParticles = updateParticles(delta, cameraPosition, renderer->g_particle_position_size_data, renderer->g_particle_color_data);
+		//particleEngine->step();
 
-		sortParticles();
-
-		glUseProgram(0);
-		glDisable(GL_BLEND);
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		//glFrustum(-100,100,-100,100, 1, 1000);
-		glm::mat4 mat = mainCamera->getProjectionMatrix();
-		glMultMatrixf((const GLfloat*)&mat[0][0]);
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
-		mat = mainCamera->getViewMatrix();
-		glMultMatrixf((GLfloat*)&mat[0][0]);
-		glBegin(GL_LINES);
-		glColor4f(1,1,1,.4);
-		for(float x = -terrainSize; x <= terrainSize; x+=1) {
-			glVertex3f(x, 0, terrainSize);
-			glVertex3f(x, 0, -terrainSize);
-			glVertex3f(terrainSize,0,x);
-			glVertex3f(-terrainSize,0,x);
-		}
-		glEnd();
-		//glFlush();
-		renderer->render(nLivingParticles);
+		drawGrid();
+		renderer->render();
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

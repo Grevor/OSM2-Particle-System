@@ -9,7 +9,7 @@
 #define UPDATER_HPP_
 
 #include "Particle.hpp"
-#include "ParticleUpdater.h"
+#include <ParticleUpdater.h>
 #include "Camera.hpp"
 
 class StandardUpdater : public ParticleUpdater<Particle> {
@@ -37,13 +37,13 @@ public:
 
 	bool updateParticle(Particle* p) override {
 		float delta = thisStep - lastStep;
-		vec3 cameraPosition = cam->getPosition();
+		//vec3 cameraPosition = cam->getPosition();
 		if(p->life > 0.0f){
 			// Decrease life
-			p->life -= lastStep;
+			p->life -= delta;
 			if (p->life > 0.0f){
 				// Simulate simple physics : gravity only, no collisions
-				p->speed += glm::vec3(0.0f,-9.81f, 0.0f) * (float)lastStep * 0.5f;
+				p->speed += glm::vec3(0.0f,-9.81f, 0.0f) * (float)delta * 0.5f;
 				p->pos += p->speed * (float)delta;
 				return false;
 
