@@ -9,7 +9,7 @@
 #include "Camera.hpp"
 
 Camera::Camera() :
-	Camera(vec3(0,0,-5), 3.14f, 0, 4.0f/3.0f, 45.0f, 100.0f)
+	Camera(vec3(0,2,-5), 0, 0, 4.0f/3.0f, 45.0f, 100.0f)
 {
 
 }
@@ -54,8 +54,20 @@ void Camera::move(float forwardAmount, float rightAmount, float upAngle, float l
 }
 
 void Camera::move(float forward, float right, float up, float upAngle, float leftAngle) {
-	position += vec3(right,up,-forward);
-	static vec3 upVec = vec3(0,1,0);
+	position += vec3(0,up,0);
+
+	vec3 forwardVec(
+			 sin(horizontalAngle),
+			0,
+			cos(horizontalAngle)
+	);
+	vec3 rightVec(
+			sin(horizontalAngle - 3.14f/2.0f),
+			0,
+			cos(horizontalAngle - 3.14f/2.0f)
+	);
+	position += forwardVec * forward;
+	position += rightVec * right;
 	horizontalAngle += leftAngle;
 	verticalAngle += upAngle;
 	updateViewMatrix();
@@ -85,15 +97,15 @@ void Camera::updateViewMatrix() {
 			sin(verticalAngle),
 			cos(verticalAngle) * cos(horizontalAngle)
 	);
-	/*vec3 right(
+	vec3 right(
 			sin(horizontalAngle - 3.14f/2.0f),
 			0,
 			cos(horizontalAngle - 3.14f/2.0f)
 	);
-	vec3 up = glm::cross( right, forward );*/
-	vec3 up = vec3(sin(-verticalAngle) * cos(horizontalAngle)
+	vec3 up = glm::cross( right, forward );
+	/*vec3 up = vec3(sin(-verticalAngle) * cos(horizontalAngle)
 			,cos(verticalAngle),
-			sin(-verticalAngle) * sin(horizontalAngle));
+			sin(-verticalAngle) * sin(horizontalAngle));*/
 
 	updateViewMatrix(forward, up);
 }

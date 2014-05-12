@@ -1,6 +1,7 @@
 eclipse.preferences.version=1
 environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.mingw.exe.debug.1738666220/CPATH/delimiter=;
-environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.mingw.exe.debug.1738666220/CPATH/operation=remove
+environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.mingw.exe.debug.1738666220/CPATH/operation=replace
+environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.mingw.exe.debug.1738666220/CPATH/value=C\:\\Boost\\\:"C\:\\MinGW\\include\\"
 environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.mingw.exe.debug.1738666220/CPLUS_INCLUDE_PATH/delimiter=;
 environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.mingw.exe.debug.1738666220/CPLUS_INCLUDE_PATH/operation=remove
 environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.mingw.exe.debug.1738666220/C_INCLUDE_PATH/delimiter=;

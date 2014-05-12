@@ -47,7 +47,8 @@ GLFWwindow* window;
 Camera* mainCamera;
 int width = 800;
 int height = 600;
-float angleDelta = .1, posDelta = .1;
+float angleDelta = .1, posDelta = .5;
+float terrainSize = 100;
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
@@ -117,7 +118,7 @@ void spawnParticles (double delta) {
 	for(int i=0; i<spawnAmount; i++){
 		int particleIndex = findUnusedParticle();
 		particlesContainer[particleIndex].life = 5.0f; // This particle will live 5 seconds.
-		particlesContainer[particleIndex].pos = glm::vec3(0,0,-20.0f);
+		particlesContainer[particleIndex].pos = glm::vec3(0,0,0);
 
 		float spread = 1.5f;
 		glm::vec3 maindir = glm::vec3(0.0f, 10.0f, 0.0f);
@@ -180,6 +181,13 @@ int updateParticles(double delta, vec3 cameraPosition,
 	return particlesCount;
 }
 
+void initParticles() {
+	for (int i = 0; i < maxParticles; i++) {
+		particlesContainer[i].life = -1.0f;
+		particlesContainer[i].cameradistance = -1.0f;
+	}
+}
+
 int main(void) {
 	// Initialise GLFW
 	if (!glfwInit()) {
@@ -212,10 +220,7 @@ int main(void) {
 		return -1;
 	}
 
-	for(int i=0; i<maxParticles; i++){
-		particlesContainer[i].life = -1.0f;
-		particlesContainer[i].cameradistance = -1.0f;
-	}
+	initParticles();
 
 	// Dark blue background
 	glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
@@ -251,6 +256,27 @@ int main(void) {
 
 		sortParticles();
 
+		glUseProgram(0);
+		glDisable(GL_BLEND);
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		//glFrustum(-100,100,-100,100, 1, 1000);
+		glm::mat4 mat = mainCamera->getProjectionMatrix();
+		glMultMatrixf((const GLfloat*)&mat[0][0]);
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+		mat = mainCamera->getViewMatrix();
+		glMultMatrixf((GLfloat*)&mat[0][0]);
+		glBegin(GL_LINES);
+		glColor4f(1,1,1,.4);
+		for(float x = -terrainSize; x <= terrainSize; x+=1) {
+			glVertex3f(x, 0, terrainSize);
+			glVertex3f(x, 0, -terrainSize);
+			glVertex3f(terrainSize,0,x);
+			glVertex3f(-terrainSize,0,x);
+		}
+		glEnd();
+		//glFlush();
 		renderer->render(nLivingParticles);
 
 		glfwSwapBuffers(window);
