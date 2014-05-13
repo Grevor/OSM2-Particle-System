@@ -1,0 +1,39 @@
+# Folders
+bin/
+tmp/
+release/
+debug/
+Debug/
+latex/
+html/
+
+# Compile stage files
+depend
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Locally stored "Eclipse launch configurations"
+*.launch
+.project
+.cproject
+.settings/
