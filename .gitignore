@@ -3,6 +3,7 @@ bin/
 tmp/
 release/
 debug/
+Debug/
 latex/
 html/
 
@@ -33,4 +34,6 @@ depend
 
 # Locally stored "Eclipse launch configurations"
 *.launch
-.settings
+.project
+.cproject
+.settings/
