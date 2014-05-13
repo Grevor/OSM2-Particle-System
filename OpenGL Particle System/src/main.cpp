@@ -31,21 +31,6 @@
 using namespace glm;
 using namespace std;
 
-// CPU representation of a particle
-/*struct Particle{
-	glm::vec3 pos, speed;
-	unsigned char r,g,b,a; // Color
-	float size, angle, weight;
-	float life; // Remaining life of the particle. if <0 : dead and unused.
-	float cameradistance; // *Squared* distance to the camera. if dead : -1.0f
-
-	bool operator<(const Particle& that) const {
-		// Sort in reverse order : far particles drawn first.
-		return this->cameradistance > that.cameradistance;
-	}
-};*/
-
-
 const int maxParticles = 10000;
 Particle particlesContainer[maxParticles];
 int lastUsedParticle = 0;
@@ -55,12 +40,11 @@ Camera* mainCamera;
 StandardParticleRenderer* renderer;
 StandardParticleInitializer* init;
 TimeCurve* spawnCurve;
-int width = 800;
-int height = 600;
 float angleDelta = .1, posDelta = .5;
 float terrainSize = 100;
-GLuint textures[5];
 #define NUM_TEXTURES 3
+GLuint textures[5];
+
 
 static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
@@ -273,6 +257,11 @@ int main(void) {
 	//glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	//glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+	const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+	int width = mode->width-6;
+	int height = mode->height-60;
+	mainCamera = new Camera(vec3(0,2,-5), 0, 0, (float)width/height, 45.0f, 100.0f);
+
 	/* Create a windowed mode window and its OpenGL context */
 	window = glfwCreateWindow(width, height, "Particle System Demo", NULL, NULL);
 	if (!window) {
@@ -287,10 +276,6 @@ int main(void) {
 	glfwSetWindowSizeCallback(window, resizeCallback);
 	/* Make the window's context current */
 	glfwMakeContextCurrent(window);
-
-	const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-	glfwSetWindowSize(window, mode->width-6,mode->height-60);
-	glfwSetWindowPos(window,0,25);
 
 	// Initialize GLEW
 	glewExperimental = true; // Needed for core profile
@@ -312,10 +297,8 @@ int main(void) {
 	glGenVertexArrays(1, &VertexArrayID);
 	glBindVertexArray(VertexArrayID);
 
-	mainCamera = new Camera();
-
-	textures[1] = loadDDS("resources\\particle.DDS");
 	textures[0] = 0;
+	textures[1] = loadDDS("resources\\particle.DDS");
 	textures[2] = loadDDS("resources\\Gclef.dds");
 	textures[3] = loadDDS("resources\\Death.dds");
 
@@ -340,14 +323,6 @@ int main(void) {
 
 		// Clear the screen
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-//		glm::vec3 cameraPosition = mainCamera->getPosition();
-//
-//		spawnParticles(delta);
-//
-//		int nLivingParticles = updateParticles(delta, cameraPosition, renderer->g_particle_position_size_data, renderer->g_particle_color_data);
-//
-//		sortParticles();
 
 		particleSystem->step();
 		particleSystem->update();
