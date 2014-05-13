@@ -53,10 +53,14 @@ int lastUsedParticle = 0;
 GLFWwindow* window;
 Camera* mainCamera;
 StandardParticleRenderer* renderer;
+StandardParticleInitializer* init;
+TimeCurve* spawnCurve;
 int width = 800;
 int height = 600;
 float angleDelta = .1, posDelta = .5;
 float terrainSize = 100;
+GLuint textures[5];
+#define NUM_TEXTURES 3
 
 static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
@@ -92,10 +96,37 @@ static void keyCallback(GLFWwindow* window, int key, int scancode, int action, i
 		mainCamera->move(0,-posDelta,0,0,0);
 		break;
 	case GLFW_KEY_0:
-		renderer->setTexture(0);
+		renderer->setTexture(textures[0]);
 		break;
 	case GLFW_KEY_1:
-		renderer->setTexture(1);
+		renderer->setTexture(textures[1]);
+		break;
+	case GLFW_KEY_2:
+		renderer->setTexture(textures[2]);
+		break;
+	case GLFW_KEY_3:
+		renderer->setTexture(textures[3]);
+		break;
+	case GLFW_KEY_4:
+		renderer->setTexture(textures[4]);
+		break;
+	case GLFW_KEY_H:
+		init->setPosition(init->getPosition() + vec3(posDelta,0,0));
+		break;
+	case GLFW_KEY_K:
+		init->setPosition(init->getPosition() + vec3(-posDelta,0,0));
+		break;
+	case GLFW_KEY_U:
+		init->setPosition(init->getPosition() + vec3(0,0,posDelta));
+		break;
+	case GLFW_KEY_J:
+		init->setPosition(init->getPosition() + vec3(0,0,-posDelta));
+		break;
+	case GLFW_KEY_PAGE_UP:
+		spawnCurve->addIntensity(1000,1000/60);
+		break;
+	case GLFW_KEY_PAGE_DOWN:
+		spawnCurve->addIntensity(-1000,-1000/60);
 		break;
 	default:
 		break;
@@ -271,7 +302,7 @@ int main(void) {
 	initParticles();
 
 	// Dark blue background
-	glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	// Enable depth test
 	glEnable(GL_DEPTH_TEST);
 	// Accept fragment if it closer to the mainCamera than the former one
@@ -283,14 +314,17 @@ int main(void) {
 
 	mainCamera = new Camera();
 
-	GLuint particleTexture1 = loadDDS("resources\\particle.DDS");
+	textures[1] = loadDDS("resources\\particle.DDS");
+	textures[0] = 0;
+	textures[2] = loadDDS("resources\\Gclef.dds");
+	textures[3] = loadDDS("resources\\Death.dds");
 
 	StandardUpdater* updater = new StandardUpdater(mainCamera,glfwGetTime());
-	ParticleInitializer<Particle>* init = new StandardParticleInitializer(vec3(0,0,0));
-	ParticlePool<Particle>* pool = new NaiveParticlePool<Particle>(maxParticles);
-	Curve<long,long>* spawnCurve = new TimeCurve(glfwGetTime(),1000/60,1000);
+	init = new StandardParticleInitializer(vec3(0,0,0), .6);
+	ParticlePool<Particle>* pool = new NaiveParticlePool<Particle>(maxParticles* 20);
+	spawnCurve = new TimeCurve(glfwGetTime(),1000/60,1000);
 	ParticleSystem<Particle>* particleSystem = new ParticleSystem<Particle>(pool,init,updater,spawnCurve,false);
-	renderer = new StandardParticleRenderer(particleSystem, mainCamera, particleTexture1);
+	renderer = new StandardParticleRenderer(particleSystem, mainCamera, textures[1]);
 
 	//ParticleEngine* particleEngine = new ParticleEngine();
 	//particleEngine->addParticleSystem(particleSystem);
@@ -329,7 +363,7 @@ int main(void) {
 
 	delete mainCamera;
 	glDeleteVertexArrays(1, &VertexArrayID);
-	glDeleteTextures(1,&particleTexture1);
+	glDeleteTextures(NUM_TEXTURES,&textures[1]);
 	glfwTerminate();
 
 	return 0;

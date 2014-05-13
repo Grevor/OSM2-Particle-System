@@ -23,6 +23,15 @@ public:
 		this->particlesPerSecond = particlesPerSecond;
 	}
 
+	void setIntensity(double particlesPerSecond, double maxParticlesPerUpdate) {
+		this->particlesPerSecond = particlesPerSecond;
+		this->maxPerStep = maxParticlesPerUpdate;
+	}
+
+	void addIntensity(double particlePerSecond, double maxParticlesPerUpdate) {
+		setIntensity(this->particlesPerSecond + particlePerSecond, this->maxPerStep + maxParticlesPerUpdate);
+	}
+
 	long getValue(long unused) override {
 		(void)unused;
 		double time = glfwGetTime();

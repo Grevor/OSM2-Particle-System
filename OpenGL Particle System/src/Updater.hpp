@@ -45,8 +45,8 @@ public:
 				// Simulate simple physics : gravity only, no collisions
 				p->speed += glm::vec3(0.0f,-9.81f, 0.0f) * (float)delta * 0.5f;
 				p->pos += p->speed * (float)delta;
+				p->animationFrame = 1 - (p->life / p->startLife);
 				return false;
-
 			}
 			else{
 				// Particles that just died will be put at the end of the buffer in SortParticles();

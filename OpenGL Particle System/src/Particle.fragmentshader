@@ -3,14 +3,22 @@
 // Interpolated values from the vertex shaders
 in vec2 UV;
 in vec4 particlecolor;
+in float animationFrame;
 
 // Ouput data
 out vec4 color;
 
 uniform sampler2D textureSampler;
 uniform float textureBlend;
+uniform float textureFrameFactor;
 
 void main(){
+	vec2 frameUV = UV * vec2(textureFrameFactor,1);
+	float animFrame = animationFrame / textureFrameFactor;
+	vec2 lowFrame = vec2(trunc(animFrame), 0) * textureFrameFactor;
+	vec2 highFrame = lowFrame + vec2(textureFrameFactor, 0);
+
 	// Output color = color of the texture at the specified UV
-	color = mix (texture2D( textureSampler, UV ) * particlecolor, particlecolor, textureBlend);
+	color = mix (mix(texture2D(textureSampler, lowFrame + frameUV), texture2D(textureSampler, highFrame + frameUV), animFrame - trunc(animFrame)) * particlecolor, particlecolor, textureBlend);
+	//color = mix(texture2D(textureSampler, UV) * particlecolor, particlecolor, textureBlend);
 }

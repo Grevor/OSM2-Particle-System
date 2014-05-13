@@ -59,21 +59,29 @@ StandardParticleRenderer::~StandardParticleRenderer()
 {
 	delete[] g_particle_position_size_data;
 	delete[] g_particle_color_data;
+	delete[] g_particle_animation_frame_data;
 	glDeleteBuffers(1, &particles_color_buffer);
 	glDeleteBuffers(1, &particles_position_buffer);
 	glDeleteBuffers(1, &billboard_vertex_buffer);
+	glDeleteBuffers(1, &particle_animation_buffer);
 	glDeleteProgram(programID);
 	//glDeleteTextures(1, &texture);
 }
 
 void StandardParticleRenderer::setTexture(GLuint textureHandle) {
 	texture = textureHandle;
+	setNumTextureFrames(1);
 	if (texture == 0) {
 		textureBlend = 1;
 	}
 	else {
 		textureBlend = 0;
 	}
+}
+
+void StandardParticleRenderer::setNumTextureFrames(int frames) {
+	if(frames == 0) frames = 1;
+	textureAnimationFrameFactor = 1.0 / frames;
 }
 
 void StandardParticleRenderer::render() {
@@ -90,6 +98,10 @@ void StandardParticleRenderer::render(int nParticles) {
 	glBufferData(GL_ARRAY_BUFFER, maxParticles * 4 * sizeof(GLubyte), NULL, GL_STREAM_DRAW); // Buffer orphaning, a common way to improve streaming perf. See above link for details.
 	glBufferSubData(GL_ARRAY_BUFFER, 0, nParticles * sizeof(GLubyte) * 4, g_particle_color_data);
 
+	glBindBuffer(GL_ARRAY_BUFFER, particle_animation_buffer);
+	glBufferData(GL_ARRAY_BUFFER, maxParticles * sizeof(GLfloat), NULL, GL_STREAM_DRAW); // Buffer orphaning, a common way to improve streaming perf. See above link for details.
+	glBufferSubData(GL_ARRAY_BUFFER, 0, nParticles * sizeof(GLfloat), g_particle_animation_frame_data);
+
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -102,6 +114,7 @@ void StandardParticleRenderer::render(int nParticles) {
 	// Set our "myTextureSampler" sampler to user Texture Unit 0
 	glUniform1i(textureID, 0);
 	glUniform1f(textureBlendID, textureBlend);
+	glUniform1f(textureAnimationFrameFactorID, textureAnimationFrameFactor);
 
 	glm::mat4 viewMatrix = camera->getViewMatrix();
 	glm::mat4 viewProjectionMatrix = camera->getProjectionMatrix() * viewMatrix;
@@ -146,6 +159,18 @@ void StandardParticleRenderer::render(int nParticles) {
 			(void*)0                          // array buffer offset
 	);
 
+	// 4th attribute buffer : particles' animation frame
+	glEnableVertexAttribArray(3);
+	glBindBuffer(GL_ARRAY_BUFFER, particle_animation_buffer);
+	glVertexAttribPointer(
+			3,                                // attribute. No particular reason for 1, but must match the layout in the shader.
+			1,                                // size : r + g + b + a => 4
+			GL_FLOAT,                 // type
+			GL_FALSE,                          // normalized?    *** YES, this means that the unsigned char[4] will be accessible with a vec4 (floats) in the shader ***
+			0,                                // stride
+			(void*)0                          // array buffer offset
+	);
+
 	// These functions are specific to glDrawArrays*Instanced*.
 	// The first parameter is the attribute buffer we're talking about.
 	// The second parameter is the "rate at which generic vertex attributes advance when rendering multiple instances"
@@ -153,6 +178,7 @@ void StandardParticleRenderer::render(int nParticles) {
 	glVertexAttribDivisor(0, 0); // particles vertices : always reuse the same 4 vertices -> 0
 	glVertexAttribDivisor(1, 1); // positions : one per quad (its center)                 -> 1
 	glVertexAttribDivisor(2, 1); // color : one per quad                                  -> 1
+	glVertexAttribDivisor(3, 1); //animation frame: one per quad.
 
 	// Draw the particles !
 	// This draws many times a small triangle_strip (which looks like a quad).
@@ -164,6 +190,7 @@ void StandardParticleRenderer::render(int nParticles) {
 	glDisableVertexAttribArray(0);
 	glDisableVertexAttribArray(1);
 	glDisableVertexAttribArray(2);
+	glDisableVertexAttribArray(3);
 }
 
 struct ParticleSortStruct {
@@ -199,6 +226,8 @@ int StandardParticleRenderer::fillGLBuffers() {
 		g_particle_color_data[4*i+1] = p.g;
 		g_particle_color_data[4*i+2] = p.b;
 		g_particle_color_data[4*i+3] = p.a;
+
+		g_particle_animation_frame_data[i] = p.animationFrame;
 	}
 	delete iter;
 	return nParticles;
@@ -207,6 +236,7 @@ int StandardParticleRenderer::fillGLBuffers() {
 void StandardParticleRenderer::initGLBuffers() {
 	g_particle_position_size_data = new GLfloat[maxParticles * 4];
 	g_particle_color_data         = new GLubyte[maxParticles * 4];
+	g_particle_animation_frame_data = new GLfloat[maxParticles];
 
 	glGenBuffers(1, &billboard_vertex_buffer);
 	glBindBuffer(GL_ARRAY_BUFFER, billboard_vertex_buffer);
@@ -223,6 +253,10 @@ void StandardParticleRenderer::initGLBuffers() {
 	glBindBuffer(GL_ARRAY_BUFFER, particles_color_buffer);
 	// Initialize with empty (NULL) buffer : it will be updated later, each frame.
 	glBufferData(GL_ARRAY_BUFFER, maxParticles * 4 * sizeof(GLubyte), NULL, GL_STREAM_DRAW);
+
+	glGenBuffers(1, &particle_animation_buffer);
+	glBindBuffer(GL_ARRAY_BUFFER, particle_animation_buffer);
+	glBufferData(GL_ARRAY_BUFFER,maxParticles * sizeof(GLfloat), NULL, GL_STREAM_DRAW);
 }
 
 void StandardParticleRenderer::initGLShaderProgram() {
@@ -236,6 +270,7 @@ void StandardParticleRenderer::initGLShaderProgram() {
 
 	textureID = glGetUniformLocation(programID, "textureSampler");
 	textureBlendID = glGetUniformLocation(programID, "textureBlend");
+	textureAnimationFrameFactorID = glGetUniformLocation(programID, "textureFrameFactor");
 }
 
 // Fill the GPU buffer

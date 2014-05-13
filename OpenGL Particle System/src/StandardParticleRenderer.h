@@ -23,6 +23,7 @@ class StandardParticleRenderer {
 	GLuint billboard_vertex_buffer;
 	GLuint particles_position_buffer;
 	GLuint particles_color_buffer;
+	GLuint particle_animation_buffer;
 
 	GLuint programID;
 	GLuint cameraRightWorldspaceID;
@@ -33,15 +34,20 @@ class StandardParticleRenderer {
 	GLuint textureID;
 	GLfloat textureBlend; //0 = texture, 1 = no texture
 	GLuint textureBlendID;
+	GLfloat textureAnimationFrameFactor;
+	GLuint textureAnimationFrameFactorID;
+
 public:
 	GLfloat* g_particle_position_size_data;
 	GLubyte* g_particle_color_data;
+	GLfloat* g_particle_animation_frame_data;
 
 	StandardParticleRenderer() = delete;
 	StandardParticleRenderer(int maxParticles, Camera* camera);
 	StandardParticleRenderer(ParticleSystem<Particle>* particleSystem, Camera* camera);
 	StandardParticleRenderer(ParticleSystem<Particle>* particleSystem, Camera* camera, GLuint texture);
 	virtual ~StandardParticleRenderer();
+	void setNumTextureFrames(int frames);
 	void setTexture(GLuint textureHandle);
 	/**
 	 * Fills gpu buffers with particles from the currently set particle system and renders them.
