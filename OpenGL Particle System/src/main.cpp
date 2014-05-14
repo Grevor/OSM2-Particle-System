@@ -25,11 +25,16 @@
 #include "Updater.hpp"
 #include "Initializer.hpp"
 #include "NaiveParticlePool.h"
-//#include "ParticleEngine.h"
 #include "texture.hpp"
+#ifdef MULTI_THREAD
+#include "ParticleEngine.hpp"
+#endif
 
 using namespace glm;
 using namespace std;
+
+#define MAX_FPS 60
+#define SPAWN_INCREASE 1000
 
 const int maxParticles = 10000;
 Particle particlesContainer[maxParticles];
@@ -115,11 +120,12 @@ static void keyCallback(GLFWwindow* window, int key, int scancode, int action, i
 	if(keyIsPressed(window, GLFW_KEY_J)) {
 		init->setPosition(init->getPosition() + vec3(0,0,-posDelta));
 	}
-	if(keyIsPressed(window, GLFW_KEY_PAGE_UP)) {
-		spawnCurve->addIntensity(10,10/60);
+	double spawnAmountDelta = SPAWN_INCREASE * delta;
+	if(keyIsPressed(window, GLFW_KEY_COMMA)) {
+		spawnCurve->addIntensity(spawnAmountDelta,spawnAmountDelta/MAX_FPS);
 	}
-	if(keyIsPressed(window, GLFW_KEY_PAGE_DOWN)) {
-		spawnCurve->addIntensity(-10,-10/60);
+	if(keyIsPressed(window, GLFW_KEY_PERIOD)) {
+		spawnCurve->addIntensity(-spawnAmountDelta,-spawnAmountDelta/MAX_FPS);
 	}
 }
 
@@ -213,8 +219,10 @@ int main(void) {
 	ParticleSystem<Particle>* particleSystem = new ParticleSystem<Particle>(pool,init,updater,spawnCurve,false);
 	renderer = new StandardParticleRenderer(particleSystem, mainCamera, textures[1]);
 
-	//ParticleEngine* particleEngine = new ParticleEngine();
-	//particleEngine->addParticleSystem(particleSystem);
+#ifdef MULTI_THREAD
+	ParticleEngine* particleEngine = new ParticleEngine();
+	particleEngine->addParticleSystem(particleSystem);
+#endif
 
 	//double lastTime = glfwGetTime();
 	/* Loop until the user closes the window */
@@ -228,10 +236,12 @@ int main(void) {
 		// Clear the screen
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+#ifndef MULTI_THREAD
 		particleSystem->step();
 		particleSystem->update();
-
-		//particleEngine->step();
+#else
+		particleEngine->step();
+#endif
 
 		drawGrid();
 		renderer->render();

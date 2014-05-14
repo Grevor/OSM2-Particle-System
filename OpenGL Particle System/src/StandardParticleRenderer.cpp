@@ -210,6 +210,9 @@ int StandardParticleRenderer::fillGLBuffers() {
 	int nParticles = 0;
 	while(iter->hasNext()) {
 		particles[nParticles].particle = iter->next();
+		if (particles[nParticles].particle == NULL) {
+			break;
+		}
 		particles[nParticles].distSq = glm::length2(particles[nParticles].particle->pos - camPos);
 		nParticles++;
 	}
