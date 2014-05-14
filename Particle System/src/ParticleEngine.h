@@ -19,7 +19,7 @@
 class ParticleEngine: public Stepable {
 	boost::thread_group threads;
 	std::list<IterationUpdateable*> particleSystems;
-	std::list<IterationUpdateable*>::iterator taskIter;
+	typename std::list<IterationUpdateable*>::iterator taskIter;
 	boost::mutex taskMutex; //must be held to fetch a task
 	boost::interprocess::interprocess_semaphore taskSemaphore;
 	std::atomic<int> nThreads;

@@ -66,6 +66,14 @@ public:
 	}
 
 	/**
+	 * Gets the maximum number of particles that this particle system can hold.
+	 * @return Maximum number of particles.
+	 */
+	int getMaxSize() {
+		return pool->size();
+	}
+
+	/**
 	 * Resets this ParticleSystem to its starting state. Useful for reuse of ParticleSystem:s
 	 */
 	void reset() {
@@ -123,7 +131,7 @@ public:
 
 	/**
 	 * Checks if this particle system is alive.
-	 * @return
+	 * @return true if alive, else false.
 	 */
 	virtual bool isAlive() override {
 		return alive;
