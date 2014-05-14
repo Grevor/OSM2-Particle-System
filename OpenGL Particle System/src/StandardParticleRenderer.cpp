@@ -194,12 +194,11 @@ void StandardParticleRenderer::render(int nParticles) {
 }
 
 struct ParticleSortStruct {
-	float distSq;
+	float camSpaceZ;
 	Particle* particle;
 
 	bool operator<(const ParticleSortStruct& that) const {
-		// Sort in reverse order : far particles drawn first.
-		return this->distSq > that.distSq;
+		return this->camSpaceZ < that.camSpaceZ;
 	}
 };
 
@@ -207,13 +206,16 @@ int StandardParticleRenderer::fillGLBuffers() {
 	ParticleSortStruct particles[maxParticles];
 	ParticleIterator<Particle>* iter = particleSystem->getLivingParticles();
 	vec3 camPos = camera->getPosition();
+	mat4 viewMatrix = camera->getViewMatrix();
+	vec3 viewMatrixZRow(viewMatrix[0][2], viewMatrix[1][2], viewMatrix[2][2]);
+	float viewMatrixZTranslation = viewMatrix[3][2];
 	int nParticles = 0;
 	while(iter->hasNext()) {
 		particles[nParticles].particle = iter->next();
 		if (particles[nParticles].particle == NULL) {
 			break;
 		}
-		particles[nParticles].distSq = glm::length2(particles[nParticles].particle->pos - camPos);
+		particles[nParticles].camSpaceZ = glm::dot(particles[nParticles].particle->pos, viewMatrixZRow) + viewMatrixZTranslation;
 		nParticles++;
 	}
 	std::sort(&particles[0], &particles[nParticles]);
