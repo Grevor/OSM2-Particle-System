@@ -252,7 +252,9 @@ int main(void) {
 	}
 
 	delete mainCamera;
+#ifdef MULTI_THREAD
 	delete particleEngine;
+#endif
 	glDeleteVertexArrays(1, &VertexArrayID);
 	glDeleteTextures(NUM_TEXTURES,&textures[1]);
 	glfwTerminate();

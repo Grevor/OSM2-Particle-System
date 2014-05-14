@@ -43,10 +43,6 @@ StandardParticleRenderer::StandardParticleRenderer(ParticleSystem<Particle>* par
 	StandardParticleRenderer(particleSystem->getMaxSize(), camera)
 {
 	this->particleSystem = particleSystem;
-/*	this->maxParticles = particleSystem->getMaxSize();
-	this->camera = camera;
-	initGLBuffers();
-	initGLShaderProgram();*/
 }
 
 StandardParticleRenderer::StandardParticleRenderer(ParticleSystem<Particle>* particleSystem, Camera* camera, GLuint texture) :
@@ -65,7 +61,6 @@ StandardParticleRenderer::~StandardParticleRenderer()
 	glDeleteBuffers(1, &billboard_vertex_buffer);
 	glDeleteBuffers(1, &particle_animation_buffer);
 	glDeleteProgram(programID);
-	//glDeleteTextures(1, &texture);
 }
 
 void StandardParticleRenderer::setTexture(GLuint textureHandle) {
@@ -111,14 +106,14 @@ void StandardParticleRenderer::render(int nParticles) {
 	// Bind our texture in Texture Unit 0
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texture);
-	// Set our "myTextureSampler" sampler to user Texture Unit 0
+
 	glUniform1i(textureID, 0);
 	glUniform1f(textureBlendID, textureBlend);
 	glUniform1f(textureAnimationFrameFactorID, textureAnimationFrameFactor);
 
 	glm::mat4 viewMatrix = camera->getViewMatrix();
 	glm::mat4 viewProjectionMatrix = camera->getProjectionMatrix() * viewMatrix;
-	// Same as the billboards tutorial
+
 	glUniform3f(cameraRightWorldspaceID, viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]);
 	glUniform3f(cameraUpWorldspaceID   , viewMatrix[0][1], viewMatrix[1][1], viewMatrix[2][1]);
 	glUniformMatrix4fv(viewProjMatrixID, 1, GL_FALSE, &viewProjectionMatrix[0][0]);
@@ -165,8 +160,8 @@ void StandardParticleRenderer::render(int nParticles) {
 	glVertexAttribPointer(
 			3,                                // attribute. No particular reason for 1, but must match the layout in the shader.
 			1,                                // size : r + g + b + a => 4
-			GL_FLOAT,                 // type
-			GL_FALSE,                          // normalized?    *** YES, this means that the unsigned char[4] will be accessible with a vec4 (floats) in the shader ***
+			GL_FLOAT,                 		  // type
+			GL_FALSE,                         // normalized?    *** YES, this means that the unsigned char[4] will be accessible with a vec4 (floats) in the shader ***
 			0,                                // stride
 			(void*)0                          // array buffer offset
 	);
@@ -203,13 +198,12 @@ struct ParticleSortStruct {
 };
 
 int StandardParticleRenderer::fillGLBuffers() {
-	ParticleSortStruct particles[maxParticles];
 	ParticleIterator<Particle>* iter = particleSystem->getLivingParticles();
-	vec3 camPos = camera->getPosition();
 	mat4 viewMatrix = camera->getViewMatrix();
 	vec3 viewMatrixZRow(viewMatrix[0][2], viewMatrix[1][2], viewMatrix[2][2]);
 	float viewMatrixZTranslation = viewMatrix[3][2];
 	int nParticles = 0;
+	ParticleSortStruct particles[maxParticles];
 	while(iter->hasNext()) {
 		particles[nParticles].particle = iter->next();
 		if (particles[nParticles].particle == NULL) {
@@ -277,16 +271,3 @@ void StandardParticleRenderer::initGLShaderProgram() {
 	textureBlendID = glGetUniformLocation(programID, "textureBlend");
 	textureAnimationFrameFactorID = glGetUniformLocation(programID, "textureFrameFactor");
 }
-
-// Fill the GPU buffer
-/*
-g_particule_position_size_data[4*particlesCount+0] = p.pos.x;
-g_particule_position_size_data[4*particlesCount+1] = p.pos.y;
-g_particule_position_size_data[4*particlesCount+2] = p.pos.z;
-
-g_particule_position_size_data[4*particlesCount+3] = p.size;
-
-g_particule_color_data[4*particlesCount+0] = p.r;
-g_particule_color_data[4*particlesCount+1] = p.g;
-g_particule_color_data[4*particlesCount+2] = p.b;
-g_particule_color_data[4*particlesCount+3] = p.a;*/
