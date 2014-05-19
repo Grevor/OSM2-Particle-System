@@ -27,8 +27,6 @@ class FusedInitializer {
 		i1.init(p);
 		i2.init(p);
 	}
-
-
 };
 
 
@@ -56,12 +54,10 @@ public:
 		p->a = rand() % deltaColor[3] + minColor[3];
 	}
 
-	inline unsigned char getRandomColor(){
-		unsigned char randColor[4];
+	inline void getRandomColor(unsigned char*  dest){
 		for(int i = 0; i < 4; i++){
-			randColor[i] = (rand() % deltaColor[i] + minColor[i]);
+			dest[i] = (rand() % deltaColor[i] + minColor[i]);
 		}
-		return randColor;
 	}
 };
 
