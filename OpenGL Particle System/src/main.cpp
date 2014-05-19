@@ -13,6 +13,8 @@
 #include <stdlib.h>
 #include <algorithm>
 
+#include <boost/thread/thread.hpp>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/norm.hpp>
@@ -40,8 +42,6 @@ using namespace std;
 #define SPAWN_INCREASE 1000
 
 const int maxParticles = 10000;
-Particle particlesContainer[maxParticles];
-int lastUsedParticle = 0;
 
 GLFWwindow* window;
 Camera* mainCamera;
@@ -138,7 +138,6 @@ void resizeCallback(GLFWwindow* win, int width, int height) {
 }
 
 void drawGrid() {
-	//particleEngine->step();
 	glUseProgram(0);
 	glDisable(GL_BLEND);
 	glMatrixMode(GL_PROJECTION);
@@ -218,7 +217,7 @@ int main(void) {
 	StandardUpdater* updater = new StandardUpdater(mainCamera,glfwGetTime());
 	init = new StandardParticleInitializer(vec3(0,0,0), .6);
 	ParticlePool<Particle>* pool = new NaiveParticlePool<Particle>(maxParticles* 20);
-	spawnCurve = new TimeCurve(glfwGetTime(),1000/60,1000);
+	spawnCurve = new TimeCurve(1000/60,1000);
 	ParticleSystem<Particle>* particleSystem = new ParticleSystem<Particle>(pool,init,updater,spawnCurve,false);
 	renderer = new StandardParticleRenderer(particleSystem, mainCamera, textures[1]);
 
@@ -248,15 +247,23 @@ int main(void) {
 	particleEngine->addParticleSystem(particleSystem2);
 #endif
 
-	//double lastTime = glfwGetTime();
+	double timePerFrame = 1.0/MAX_FPS;
+	double previousTime = glfwGetTime();
+	double newTime = 0;
 	/* Loop until the user closes the window */
 	while (!glfwWindowShouldClose(window))
 	{
-//		double currentTime = glfwGetTime();
-//		double delta = currentTime - lastTime;
-//		lastTime = currentTime;
-		updater->setTime(glfwGetTime());
-		handler->updateDelta(glfwGetTime());
+		newTime = glfwGetTime();
+		double deltaTime = newTime - previousTime;
+		previousTime = newTime;
+
+		if (deltaTime < timePerFrame) {
+			boost::this_thread::sleep(boost::posix_time::microseconds((timePerFrame - deltaTime)*1000000));
+		}
+
+		updater->setTime(newTime);
+		handler->updateDelta(newTime);
+		spawnCurve->update(deltaTime);
 
 		// Clear the screen
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -277,6 +284,7 @@ int main(void) {
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 		keyCallback(window,0,0,0,0);
+
 	}
 
 	delete mainCamera;
