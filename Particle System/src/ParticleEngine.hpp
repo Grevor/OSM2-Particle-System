@@ -20,24 +20,28 @@
 class ParticleEngine: public Stepable {
 	boost::thread_group threads;
 	std::list<IterationUpdateable*> particleSystems;
-	typename std::list<IterationUpdateable*>::iterator taskIter;
-	boost::mutex taskMutex; //must be held to fetch a task
-	boost::interprocess::interprocess_semaphore taskSemaphore;
+	std::list<IterationUpdateable*> startedTasks;
+	typename std::list<IterationUpdateable*>::iterator newTaskIter;
+	boost::mutex mutex; //monitor mutex
+	boost::condition_variable newTasksCV;
+	boost::condition_variable taskCompletionCV;
+	//boost::interprocess::interprocess_semaphore taskSemaphore;
 	std::atomic<int> nThreads;
-	std::atomic<int> nWorkingThreads;
-	std::atomic<int> nTasks;
+	std::atomic<int> nUninititializedTasks;
 	bool isRunning;
 
 public:
 	ParticleEngine() : ParticleEngine(boost::thread::hardware_concurrency()) {}
 
-	ParticleEngine(int numThreads) : taskSemaphore(0) {
+	ParticleEngine(int numThreads)
+		//taskSemaphore(0)
+	{
 		if (numThreads < 1)
 			throw std::invalid_argument("Too few threads: " + numThreads);
 		this->isRunning = true;
-		this->nThreads = 0;
-		this->nWorkingThreads = 0;
-		this->nTasks = 0;
+		this->nThreads = numThreads;
+		//this->nWorkingThreads = numThreads;
+		this->nUninititializedTasks = 0;
 		for (int threadId = 0; threadId < numThreads; ++threadId) {
 			threads.create_thread(boost::bind(&ParticleEngine::performTasks, this));
 		}
@@ -48,8 +52,14 @@ public:
 	}
 
 	void step() override {
+		boost::mutex::scoped_lock lock(mutex);
+		waitStepComplete(&lock);
+		newTaskIter = particleSystems.begin();
+		nUninititializedTasks = particleSystems.size();
+		newTasksCV.notify_all();
+		/*taskMutex.lock();
 		typename std::list<IterationUpdateable*>::iterator iter = particleSystems.begin();
-		taskIter = std::list<IterationUpdateable*>::iterator(iter);
+		newTaskIter = std::list<IterationUpdateable*>::iterator(iter);
 		int newTaskCount = 0;
 		while (iter != particleSystems.end()) {
 			(*iter)->step();
@@ -57,20 +67,22 @@ public:
 			newTaskCount++;
 			taskSemaphore.post();
 		}
-		int prevNTasks = nTasks;
-		std::atomic_compare_exchange_strong(&nTasks, &prevNTasks,
-				prevNTasks + newTaskCount);
+		nTasks += newTaskCount;*/
 	}
 
 	bool isStepComplete() override {
-		return (nWorkingThreads == 0) && (nTasks == 0);
+		return nUninititializedTasks == 0 && startedTasks.empty();
 	}
 	/**
 	 * Blocking call which returns when the step is complete.
 	 */
 	void waitStepComplete() {
 		//TODO: naive implementation, busy wait. improve this
-		while (!isStepComplete()) {}
+		//while (!isStepComplete()) {}
+		boost::mutex::scoped_lock lock(mutex);
+		if (isStepComplete())
+			return;
+		taskCompletionCV.wait(lock);
 	}
 	/**
 	 * Adds a particle system to this particle engine.
@@ -90,18 +102,68 @@ public:
 		if (particleSystem == NULL) {
 			throw std::invalid_argument("Can't remove NULL from ParticleEngine.");
 		}
+		boost::mutex::scoped_lock lock(mutex);
+		waitStepComplete(&lock);
 		particleSystems.remove(particleSystem);
 	}
 
 private:
+	void waitStepComplete(boost::mutex::scoped_lock* lock) {
+		if (nUninititializedTasks == 0)
+			return;
+		taskCompletionCV.wait(*lock);
+	}
 	/**
 	 * Entry point of worker threads. Threads calling this method be enslaved under
 	 * the particle engine until it is stopped by any thread.
 	 */
 	void performTasks() {
-		++nThreads;
+		boost::mutex::scoped_lock lock(mutex);
 		while (isRunning) {
-			taskSemaphore.wait();
+			if (isStepComplete()) {
+				newTasksCV.wait(lock);
+			}
+			//Pick up uninitialized task if such exist
+			IterationUpdateable* task = NULL;
+			while (newTaskIter != particleSystems.end()) {
+				nUninititializedTasks--;
+				if ((*newTaskIter)->isAlive()) {
+					task = *newTaskIter;
+					++newTaskIter;
+					task->step();
+					startedTasks.push_back(task);
+					lock.unlock();
+					task->update();
+					lock.lock();
+				}
+				else {
+					particleSystems.erase(newTaskIter++);
+				}
+			}
+			lock.unlock();
+			//Help to finish incomplete tasks
+			while (!startedTasks.empty()) {
+				if (mutex.try_lock()) {
+					task = NULL;
+					while (!startedTasks.empty()) {
+						task = startedTasks.front();
+						startedTasks.pop_front();
+						if (!task->isStepComplete()) {
+							startedTasks.push_back(task);
+							break;
+						}
+						if (startedTasks.empty())
+							taskCompletionCV.notify_all();
+					}
+					mutex.unlock();
+					if (task != NULL) {
+						task->update();
+					}
+				}
+			}
+			lock.lock(); //lock for next loop iteration
+
+			/*taskSemaphore.wait();
 			if (!isRunning) {
 				break;
 			}
@@ -109,33 +171,32 @@ private:
 			++nWorkingThreads;
 
 			taskMutex.lock();
-			IterationUpdateable* task = *taskIter;
-			taskIter++;
+			IterationUpdateable* task = *newTaskIter;
+			newTaskIter++;
 			taskMutex.unlock();
 
 			task->update();
 
 			--nWorkingThreads;
 
-			--nTasks;
+			--nTasks;*/
 		}
 		--nThreads;
 	}
-	/*
-	 * Restarts a stopped WorkPool.
-	 *
-	void start();*/
 	/**
 	 * Stops this ParticleEngine, preventing additional work to be added
 	 * and causing worker threads to return when there is no more
 	 * work left in the pool.
 	 */
 	void stop() {
+		boost::mutex::scoped_lock lock(mutex);
 		this->isRunning = false;
-		int nWaitingThreads = nThreads - nWorkingThreads;
+		newTasksCV.notify_all();
+		lock.unlock();
+		/*int nWaitingThreads = nThreads - nWorkingThreads;
 		for (int i = 0; i < nWaitingThreads; ++i) {
 			taskSemaphore.post();
-		}
+		}*/
 		threads.join_all();
 	}
 };
