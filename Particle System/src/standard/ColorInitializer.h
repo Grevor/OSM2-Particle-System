@@ -19,9 +19,34 @@ class ColorInitializer : public ParticleInitializer<StandardParticle>{
 
 public:
 	void initParticle(StandardParticle* part) override{
-		this->colorVector = part->render.color;
+		for(int i = 0; i < 3; i++){
+			if((part->render.color[i] < colorVectorMin[i]) || (part->render.color[i] > colorVectorMax)){
+				float random = ((float) rand()) / colorVectorMax[i];
+				float range = colorVectorMax[i]-colorVectorMin[i];
+				colorVector[i] = (random*range) + colorVectorMin[i];
+			}else{
+				colorVector[i] = part->render.color[i];
+			}
+		}
+	}
+	ColorInitializer(){
+		srand(time(NULL));
+		for(int i = 0; i < 3; i++){
 
+			colorVector[i] = (((float) rand()) / 256);
 
+			if(colorVector[i] > 20){
+				colorVectorMin[i] = (colorVector[i] - 20);
+			}else{
+				colorVectorMin[i] = 0;
+			}
+
+			if(colorVector < 236){
+				colorVectorMax[i] = (colorVector[1] + 20);
+			}else{
+				colorVectorMax[i] = 256;
+			}
+		}
 	}
 
 	ColorInitializer(StandardParticle* part, const Vector3f* min, const Vector3f* max){
@@ -31,7 +56,7 @@ public:
 		srand(time(NULL));
 	}
 
-	Vector3f* ColorInit(){
+	Vector3f* colorInit(){
 		if((colorVectorMin[0]<= colorVectorMax[0]) && (colorVectorMin[1] <= colorVectorMax[1]) && (colorVectorMin[2] <= colorVectorMax[2])){
 			for(int i = 0; i < 3; i++){
 			float random = ((float) rand()) / colorVectorMax[i];
@@ -41,9 +66,10 @@ public:
 		}
 		return colorVector;
 	}
-
-
-
+	void setLimit(Vector3f min, Vector3f max){
+		colorVectorMax = max;
+		colorVectorMin = min;
+	}
 };
 
 
