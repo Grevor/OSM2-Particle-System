@@ -27,6 +27,8 @@ class FusedInitializer {
 		i1.init(p);
 		i2.init(p);
 	}
+
+
 };
 
 
@@ -53,6 +55,14 @@ public:
 		p->b = rand() % deltaColor[2] + minColor[2];
 		p->a = rand() % deltaColor[3] + minColor[3];
 	}
+
+	inline unsigned char getRandomColor(){
+		unsigned char randColor[4];
+		for(int i = 0; i < 4; i++){
+			randColor[i] = (rand() % deltaColor[i] + minColor[i]);
+		}
+		return randColor;
+	}
 };
 
 class RandomSpherePositionInitializer {
@@ -73,6 +83,17 @@ public:
 		norm *= min;
 		p->pos = pos + norm + middle;
 	}
+	//Kan vara megasuperdunder FEL!
+	inline vec3 getRandomSpherePosition(){
+		vec3 randPos = glm::sphericalRand(delta);
+		vec3 norm = randPos;
+		glm:normalize(norm);
+		norm*=min;
+		randPos = randPos + norm + middle;
+
+		return randPos;
+	}
+
 };
 
 /**
@@ -91,6 +112,13 @@ public:
 		glm::normalize(norm);
 		p->speed = norm * linearRand(min,max);
 	}
+
+	inline vec3 getRandomVelocityFromOrigin(vec3 pos){
+		glm::normalize(pos);
+		vec3 randSpeed = (pos * linearRand(min,max));
+		return randSpeed;
+	}
+
 };
 
 class VelocitySpreadInitializer {
@@ -105,9 +133,17 @@ public:
 		min = minSpeed;
 		max = maxSpeed;
 	}
-
 	inline void init(Particle* p) {
 		p->speed = mainDir * glm::linearRand(min,max) + spread * glm::sphericalRand<float>(1);
+	}
+
+	inline float getSpread(){
+		return spread;
+	}
+
+	inline vec3 getRandVelocitySpread(){
+		vec3 randSpeed = mainDir * glm::linearRand(min,max) + spread * glm::sphericalRand<float>(1);
+		return randSpeed;
 	}
 };
 
@@ -126,7 +162,6 @@ public:
 	inline vec3 getOffset() {
 		return offset;
 	}
-
 	inline void init(Particle* p) {
 		p->pos +=offset;
 	}
@@ -143,7 +178,9 @@ public:
 		this->life = life;
 	}
 
-	inline float getLifetime() { return life; }
+	inline float getLifetime() {
+		return life;
+	}
 
 	inline void init(Particle* p) {
 		p->life = life;
@@ -163,6 +200,14 @@ public:
 		p->life = min + delta * (float)rand() / RAND_MAX;// linearRand(0,1);
 		p->startLife = p->life;
 	}
+
+	inline float getLifetime(Particle* part){
+		return part->life;
+	}
+	inline float getRandomLifetime(){
+		float randLife = min + delta * (float)rand() / RAND_MAX; // RAND_MAX from linearRand(0,1)??
+		return randLife;
+	}
 };
 
 class RandomSizeInitializer {
@@ -175,6 +220,15 @@ public:
 
 	inline void init(Particle* p) {
 		p->size = linearRand(min,max);
+	}
+
+	inline float getSize(Particle* part){
+		return part->size;
+	}
+
+	inline float getRandSize(){
+		float randSize = linearRand(min,max);
+		return randSize;
 	}
 };
 
