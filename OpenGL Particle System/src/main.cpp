@@ -26,6 +26,9 @@
 #include "Initializer.hpp"
 #include "NaiveParticlePool.h"
 #include "texture.hpp"
+#include "particle/ParticleHandler.hpp"
+#include "particle/SampleInitializers.hpp"
+#include "particle/Updaters.hpp"
 #ifdef MULTI_THREAD
 #include "ParticleEngine.hpp"
 #endif
@@ -219,9 +222,30 @@ int main(void) {
 	ParticleSystem<Particle>* particleSystem = new ParticleSystem<Particle>(pool,init,updater,spawnCurve,false);
 	renderer = new StandardParticleRenderer(particleSystem, mainCamera, textures[1]);
 
+
+	unsigned char minColor[4] = {100,100,100,100};
+	unsigned char maxColor[4] = {255,255,255,255};
+
+	ParticleHandler<FountainInitializer, RandomColorInitializer, RandomSizeInitializer,
+	RandomLifetimeInitializer,NullInitializer,NullInitializer,ConstantForceUpdater, PhysicsUpdater, LifetimeUpdater>* handler =
+			new ParticleHandler<FountainInitializer, RandomColorInitializer, RandomSizeInitializer,
+			RandomLifetimeInitializer,NullInitializer,NullInitializer,ConstantForceUpdater, PhysicsUpdater, LifetimeUpdater>(glfwGetTime(),
+					FountainInitializer(vec3(0,0,0),vec3(0,10,0),0,.1,.3,5,10),
+					RandomColorInitializer(minColor, maxColor),
+					RandomSizeInitializer(.3,2),
+					RandomLifetimeInitializer(5,5),
+					ConstantForceUpdater(vec3(0,-1,0), false),
+					PhysicsUpdater(),
+					LifetimeUpdater());
+
+	NaiveParticlePool<Particle>* pool2 = new NaiveParticlePool<Particle>(maxParticles * 20);
+	ParticleSystem<Particle>* particleSystem2 = new ParticleSystem<Particle>(pool2,handler,handler,spawnCurve, false);
+	StandardParticleRenderer* renderer2 = new StandardParticleRenderer(particleSystem2, mainCamera, textures[0]);
+
 #ifdef MULTI_THREAD
 	ParticleEngine* particleEngine = new ParticleEngine();
 	particleEngine->addParticleSystem(particleSystem);
+	particleEngine->addParticleSystem(particleSystem2);
 #endif
 
 	//double lastTime = glfwGetTime();
@@ -232,19 +256,23 @@ int main(void) {
 //		double delta = currentTime - lastTime;
 //		lastTime = currentTime;
 		updater->setTime(glfwGetTime());
+		handler->updateDelta(glfwGetTime());
 
 		// Clear the screen
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 #ifndef MULTI_THREAD
 		particleSystem->step();
+		particleSystem2->step();
 		particleSystem->update();
+		particleSystem2->update();
 #else
 		particleEngine->step();
 #endif
 
 		drawGrid();
 		renderer->render();
+		renderer2->render();
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
