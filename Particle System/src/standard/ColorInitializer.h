@@ -15,35 +15,61 @@
 #include <stdlib.h>
 
 class ColorInitializer : public ParticleInitializer<StandardParticle>{
-	const Vector3f* ColorVectorMin, ColorVectorMax, ColorVector;
+	const Vector3f* colorVectorMin, colorVectorMax, colorVector;
 
 public:
 	void initParticle(StandardParticle* part) override{
-		this->ColorVector = part->render.color;
+		for(int i = 0; i < 3; i++){
+			if((part->render.color[i] < colorVectorMin[i]) || (part->render.color[i] > colorVectorMax)){
+				float random = ((float) rand()) / colorVectorMax[i];
+				float range = colorVectorMax[i]-colorVectorMin[i];
+				colorVector[i] = (random*range) + colorVectorMin[i];
+			}else{
+				colorVector[i] = part->render.color[i];
+			}
+		}
+	}
+	ColorInitializer(){
+		srand(time(NULL));
+		for(int i = 0; i < 3; i++){
 
+			colorVector[i] = (((float) rand()) / 256);
 
+			if(colorVector[i] > 20){
+				colorVectorMin[i] = (colorVector[i] - 20);
+			}else{
+				colorVectorMin[i] = 0;
+			}
+
+			if(colorVector < 236){
+				colorVectorMax[i] = (colorVector[1] + 20);
+			}else{
+				colorVectorMax[i] = 256;
+			}
+		}
 	}
 
 	ColorInitializer(StandardParticle* part, const Vector3f* min, const Vector3f* max){
-		this->ColorVector = part->render.color;
-		this->ColorVectorMin = min;
-		this->ColorVectorMax = max;
+		this->colorVector = part->render.color;
+		this->colorVectorMin = min;
+		this->colorVectorMax = max;
 		srand(time(NULL));
 	}
 
-	Vector3f* ColorInit(){
-		if((ColorVectorMin[0]<= ColorVectorMax[0]) && (ColorVectorMin[1] <= ColorVectorMax[1]) && (ColorVectorMin[2] <= ColorVectorMax[2])){
+	Vector3f* colorInit(){
+		if((colorVectorMin[0]<= colorVectorMax[0]) && (colorVectorMin[1] <= colorVectorMax[1]) && (colorVectorMin[2] <= colorVectorMax[2])){
 			for(int i = 0; i < 3; i++){
-			float random = ((float) rand()) / ColorVectorMax[i];
-			float range = ColorVectorMax[i]-ColorVectorMin[i];
-			ColorVector[i] = (random*range) + ColorVectorMin[i];
+			float random = ((float) rand()) / colorVectorMax[i];
+			float range = colorVectorMax[i]-colorVectorMin[i];
+			colorVector[i] = (random*range) + colorVectorMin[i];
 			}
 		}
-		return ColorVector;
+		return colorVector;
 	}
-
-
-
+	void setLimit(Vector3f min, Vector3f max){
+		colorVectorMax = max;
+		colorVectorMin = min;
+	}
 };
 
 
