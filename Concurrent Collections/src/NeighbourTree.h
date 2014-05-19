@@ -20,7 +20,7 @@ namespace bgi = boost::geometry::index;
 namespace bgm = boost::geometry::model;
 
 //A point is DIMENSION amount of double.
-typedef bgm::point<double, 2, bg::cs::cartesian> point;
+typedef bgm::point<double, 3, bg::cs::cartesian> point;
 
 //Each pair in the tree is:
 //  * a point (used for localization)
@@ -28,7 +28,10 @@ typedef bgm::point<double, 2, bg::cs::cartesian> point;
 //  * an arbitrary void pointer
 typedef std::pair<point, void*> value;
 
-typedef struct returnCarry *ReturnCarry;
+typedef struct returnCarry {
+    std::vector<value> resultIterator;
+    int *distances;
+} *ReturnCarry;
 
 class NeighbourTree {
     private:
@@ -36,7 +39,7 @@ class NeighbourTree {
     public:
         /* This assumes particles can not have the same position */
         /* Removes the particle at startPosition, and adds a particle at endPosition */
-        void updateParticlePosition(double *startPosition, double *endPosition);
+        void updateParticlePosition(double *startPosition, double *endPosition, void *particle);
 
         /* initializes a particle, represented only as a coordinate */
         void initParticle(double position[]);
@@ -45,13 +48,16 @@ class NeighbourTree {
         void initParticle(double position[], void *particle);
 
         /* Returns the pointer to an vector */
-        ReturnCarry getNeighbours(double position[], int amountOfNeighbours);
+        ReturnCarry getKNeighbours(double position[], int amountOfNeighbours);
+
+        /* Returns the pointer to an vector */
+        ReturnCarry getRadiusNeighbours(double position[], double distance);
 
         /* Prints the result */
         void printResult(ReturnCarry result);
 
         /* Frees a IndexAndDist struct */
-        void freeResult(void *carry);
+        void freeResult(ReturnCarry result);
 
         NeighbourTree(void);
 

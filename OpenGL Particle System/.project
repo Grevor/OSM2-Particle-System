@@ -3,6 +3,7 @@
 	<name>OpenGL Particle System</name>
 	<comment></comment>
 	<projects>
+		<project>Particle System</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

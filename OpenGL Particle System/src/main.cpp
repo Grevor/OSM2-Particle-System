@@ -19,27 +19,25 @@
 
 #include "Camera.hpp"
 #include "shader.hpp"
+#include "StandardParticleRenderer.h"
+#include "Particle.hpp"
+#include "TimeCurve.hpp"
+#include "Updater.hpp"
+#include "Initializer.hpp"
+#include "NaiveParticlePool.h"
+#include "texture.hpp"
+#include "particle/ParticleHandler.hpp"
+#include "particle/SampleInitializers.hpp"
+#include "particle/Updaters.hpp"
+#ifdef MULTI_THREAD
+#include "ParticleEngine.hpp"
+#endif
 
 using namespace glm;
 using namespace std;
 
-// CPU representation of a particle
-struct Particle{
-	glm::vec3 pos, speed;
-	unsigned char r,g,b,a; // Color
-	float size, angle, weight;
-	float life; // Remaining life of the particle. if <0 : dead and unused.
-	float cameradistance; // *Squared* distance to the camera. if dead : -1.0f
-
-	bool operator<(const Particle& that) const {
-		// Sort in reverse order : far particles drawn first.
-		return this->cameradistance > that.cameradistance;
-	}
-};
-
-
-
-
+#define MAX_FPS 60
+#define SPAWN_INCREASE 1000
 
 const int maxParticles = 10000;
 Particle particlesContainer[maxParticles];
@@ -47,139 +45,119 @@ int lastUsedParticle = 0;
 
 GLFWwindow* window;
 Camera* mainCamera;
-int width = 800;
-int height = 600;
-float angleDelta = .1, posDelta = .1;
+StandardParticleRenderer* renderer;
+StandardParticleInitializer* init;
+TimeCurve* spawnCurve;
+float anglePerSec = .6, posPerSec = 8;
+float terrainSize = 100;
+double lastTime = 0;
+#define NUM_TEXTURES 3
+GLuint textures[5];
 
-static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+inline bool keyIsPressed(GLFWwindow* window, int keyCode) {
+	return glfwGetKey(window, keyCode) != 0; //== GLFW_PRESS || glfwGetKey(window, keyCode) == GLFW_REPEAT;
+}
+
+static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	switch(key) {
-	case GLFW_KEY_UP:
+	double thisTime = glfwGetTime();
+	double delta = thisTime - lastTime;
+
+	double angleDelta = anglePerSec * delta;
+	double posDelta = posPerSec * delta;
+	lastTime = thisTime;
+	if(keyIsPressed(window, GLFW_KEY_UP)) {
 		mainCamera->move(0,0,0,angleDelta,0);
-		break;
-	case GLFW_KEY_DOWN:
+	}
+	if(keyIsPressed(window, GLFW_KEY_DOWN)) {
 		mainCamera->move(0,0,0,-angleDelta,0);
-		break;
-	case GLFW_KEY_LEFT:
+	}
+	if(keyIsPressed(window, GLFW_KEY_LEFT)) {
 		mainCamera->move(0,0,0,0,angleDelta);
-		break;
-	case GLFW_KEY_RIGHT:
+	}
+	if(keyIsPressed(window, GLFW_KEY_RIGHT)) {
 		mainCamera->move(0,0,0,0,-angleDelta);
-		break;
-	case GLFW_KEY_SPACE:
+	}
+	if(keyIsPressed(window, GLFW_KEY_SPACE)) {
 		mainCamera->move(0,0,posDelta,0,0);
-		break;
-	case GLFW_KEY_LEFT_CONTROL:
+	}
+	if(keyIsPressed(window, GLFW_KEY_LEFT_CONTROL)) {
 		mainCamera->move(0,0,-posDelta,0,0);
-		break;
-	case GLFW_KEY_W:
+	}
+	if(keyIsPressed(window, GLFW_KEY_W)) {
 		mainCamera->move(posDelta,0,0,0,0);
-		break;
-	case GLFW_KEY_S:
+	}
+	if(keyIsPressed(window, GLFW_KEY_S)) {
 		mainCamera->move(-posDelta,0,0,0,0);
-		break;
-	case GLFW_KEY_D:
+	}
+	if(keyIsPressed(window, GLFW_KEY_D)) {
 		mainCamera->move(0,posDelta,0,0,0);
-		break;
-	case GLFW_KEY_A:
+	}
+	if(keyIsPressed(window, GLFW_KEY_A)) {
 		mainCamera->move(0,-posDelta,0,0,0);
-		break;
-	default:
-		break;
+	}
+	if(keyIsPressed(window, GLFW_KEY_0)) {
+		renderer->setTexture(textures[0]);
+	}
+	if(keyIsPressed(window, GLFW_KEY_1)) {
+		renderer->setTexture(textures[1]);
+	}
+	if(keyIsPressed(window, GLFW_KEY_2)) {
+		renderer->setTexture(textures[2]);
+	}
+	if(keyIsPressed(window, GLFW_KEY_3)) {
+		renderer->setTexture(textures[3]);
+	}
+	if(keyIsPressed(window, GLFW_KEY_4)) {
+		renderer->setTexture(textures[4]);
+	}
+	if(keyIsPressed(window, GLFW_KEY_H)) {
+		init->setPosition(init->getPosition() + vec3(posDelta,0,0));
+	}
+	if(keyIsPressed(window, GLFW_KEY_K)) {
+		init->setPosition(init->getPosition() + vec3(-posDelta,0,0));
+	}
+	if(keyIsPressed(window, GLFW_KEY_U)) {
+		init->setPosition(init->getPosition() + vec3(0,0,posDelta));
+	}
+	if(keyIsPressed(window, GLFW_KEY_J)) {
+		init->setPosition(init->getPosition() + vec3(0,0,-posDelta));
+	}
+	double spawnAmountDelta = SPAWN_INCREASE * delta;
+	if(keyIsPressed(window, GLFW_KEY_COMMA)) {
+		spawnCurve->addIntensity(spawnAmountDelta,spawnAmountDelta/MAX_FPS);
+	}
+	if(keyIsPressed(window, GLFW_KEY_PERIOD)) {
+		spawnCurve->addIntensity(-spawnAmountDelta,-spawnAmountDelta/MAX_FPS);
 	}
 }
 
-int findUnusedParticle(){
-	for(int i=lastUsedParticle; i<maxParticles; i++){
-		if (particlesContainer[i].life < 0){
-			lastUsedParticle = i;
-			return i;
-		}
-	}
-
-	for(int i=0; i<lastUsedParticle; i++){
-		if (particlesContainer[i].life < 0){
-			lastUsedParticle = i;
-			return i;
-		}
-	}
-
-	return 0; // All particles are taken, override the first one
+void resizeCallback(GLFWwindow* win, int width, int height) {
+	glViewport(0,0,width,height);
+	mainCamera->setAspectRatio((float)width/height);
 }
 
-void sortParticles(){
-	std::sort(&particlesContainer[0], &particlesContainer[maxParticles]);
-}
-
-void spawnParticles (double delta) {
-	int spawnAmount = (int)(delta*1000.0);
-	if (spawnAmount > (int)(0.016f*1000.0))
-		spawnAmount = (int)(0.016f*1000.0);
-
-	for(int i=0; i<spawnAmount; i++){
-		int particleIndex = findUnusedParticle();
-		particlesContainer[particleIndex].life = 5.0f; // This particle will live 5 seconds.
-		particlesContainer[particleIndex].pos = glm::vec3(0,0,-20.0f);
-
-		float spread = 1.5f;
-		glm::vec3 maindir = glm::vec3(0.0f, 10.0f, 0.0f);
-		// Very bad way to generate a random direction;
-		// See for instance http://stackoverflow.com/questions/5408276/python-uniform-spherical-distribution instead,
-		// combined with some user-controlled parameters (main direction, spread, etc)
-		glm::vec3 randomdir = glm::vec3(
-				(rand()%2000 - 1000.0f)/1000.0f,
-				(rand()%2000 - 1000.0f)/1000.0f,
-				(rand()%2000 - 1000.0f)/1000.0f
-		);
-
-		particlesContainer[particleIndex].speed = maindir + randomdir*spread;
-
-		// Very bad way to generate a random color
-		particlesContainer[particleIndex].r = rand() % 256;
-		particlesContainer[particleIndex].g = rand() % 256;
-		particlesContainer[particleIndex].b = rand() % 256;
-		particlesContainer[particleIndex].a = (rand() % 256) / 3;
-
-		particlesContainer[particleIndex].size = (rand()%1000)/2000.0f + 0.1f;
+void drawGrid() {
+	//particleEngine->step();
+	glUseProgram(0);
+	glDisable(GL_BLEND);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glm::mat4 matrix = mainCamera->getProjectionMatrix();
+	glMultMatrixf((const GLfloat*) (&matrix[0][0]));
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	matrix = mainCamera->getViewMatrix();
+	glMultMatrixf((GLfloat*) (&matrix[0][0]));
+	glBegin(GL_LINES);
+	glColor4f(1, 1, 1, .4);
+	for (float x = -terrainSize; x <= terrainSize; x += 1) {
+		glVertex3f(x, 0, terrainSize);
+		glVertex3f(x, 0, -terrainSize);
+		glVertex3f(terrainSize, 0, x);
+		glVertex3f(-terrainSize, 0, x);
 	}
-}
-
-int updateParticles(double delta, vec3 cameraPosition,
-		GLfloat* g_particule_position_size_data, GLubyte* g_particule_color_data) {
-	// Simulate all particles
-	int particlesCount = 0;
-	for(int i=0; i<maxParticles; i++){
-		Particle& p = particlesContainer[i]; // shortcut
-		if(p.life > 0.0f){
-			// Decrease life
-			p.life -= delta;
-			if (p.life > 0.0f){
-				// Simulate simple physics : gravity only, no collisions
-				p.speed += glm::vec3(0.0f,-9.81f, 0.0f) * (float)delta * 0.5f;
-				p.pos += p.speed * (float)delta;
-				p.cameradistance = glm::length2( p.pos - cameraPosition );
-				//ParticlesContainer[i].pos += glm::vec3(0.0f,10.0f, 0.0f) * (float)delta;
-
-				// Fill the GPU buffer
-				g_particule_position_size_data[4*particlesCount+0] = p.pos.x;
-				g_particule_position_size_data[4*particlesCount+1] = p.pos.y;
-				g_particule_position_size_data[4*particlesCount+2] = p.pos.z;
-
-				g_particule_position_size_data[4*particlesCount+3] = p.size;
-
-				g_particule_color_data[4*particlesCount+0] = p.r;
-				g_particule_color_data[4*particlesCount+1] = p.g;
-				g_particule_color_data[4*particlesCount+2] = p.b;
-				g_particule_color_data[4*particlesCount+3] = p.a;
-			}
-			else{
-				// Particles that just died will be put at the end of the buffer in SortParticles();
-				p.cameradistance = -1.0f;
-			}
-			particlesCount++;
-		}
-	}
-	return particlesCount;
+	glEnd();
 }
 
 int main(void) {
@@ -194,8 +172,13 @@ int main(void) {
 	//glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	//glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+	const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+	int width = mode->width-6;
+	int height = mode->height-60;
+	mainCamera = new Camera(vec3(0,2,-5), 0, 0, (float)width/height, 45.0f, 100.0f);
+
 	/* Create a windowed mode window and its OpenGL context */
-	window = glfwCreateWindow(width, height, "Hello World", NULL, NULL);
+	window = glfwCreateWindow(width, height, "Particle System Demo", NULL, NULL);
 	if (!window) {
 		fprintf( stderr,
 				"Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible.\n");
@@ -203,7 +186,9 @@ int main(void) {
 		return -1;
 	}
 
-	glfwSetKeyCallback(window, key_callback);
+	//glfwSetKeyCallback(window, keyCallback);
+	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
+	glfwSetWindowSizeCallback(window, resizeCallback);
 	/* Make the window's context current */
 	glfwMakeContextCurrent(window);
 
@@ -214,213 +199,93 @@ int main(void) {
 		return -1;
 	}
 
-	glewIsSupported("");
-
 	// Dark blue background
-	glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	// Enable depth test
 	glEnable(GL_DEPTH_TEST);
-	// Accept fragment if it closer to the camera than the former one
+	// Accept fragment if it closer to the mainCamera than the former one
 	glDepthFunc(GL_LESS);
 
 	GLuint VertexArrayID;
 	glGenVertexArrays(1, &VertexArrayID);
 	glBindVertexArray(VertexArrayID);
 
-	// Create and compile our GLSL program from the shaders
-	GLuint programID = loadShaders(
-			"src\\Particle.vertexshader",
-			"src\\Particle.fragmentshader" );
+	textures[0] = 0;
+	textures[1] = loadDDS("resources\\particle.DDS");
+	textures[2] = loadDDS("resources\\Gclef.dds");
+	textures[3] = loadDDS("resources\\Death.dds");
 
-	// Vertex shader
-	GLuint CameraRight_worldspace_ID  = glGetUniformLocation(programID, "CameraRight_worldspace");
-	GLuint CameraUp_worldspace_ID  = glGetUniformLocation(programID, "CameraUp_worldspace");
-	GLuint ViewProjMatrixID = glGetUniformLocation(programID, "VP");
-
-	static GLfloat* g_particule_position_size_data = new GLfloat[maxParticles * 4];
-	static GLubyte* g_particule_color_data         = new GLubyte[maxParticles * 4];
-
-	for(int i=0; i<maxParticles; i++){
-		particlesContainer[i].life = -1.0f;
-		particlesContainer[i].cameradistance = -1.0f;
-	}
-
-	static const GLfloat g_vertex_buffer_data[] = {
-			-0.5f, -0.5f, 0.0f,
-			0.5f, -0.5f, 0.0f,
-			-0.5f,  0.5f, 0.0f,
-			0.5f,  0.5f, 0.0f,
-	};
-	GLuint billboard_vertex_buffer;
-	glGenBuffers(1, &billboard_vertex_buffer);
-	glBindBuffer(GL_ARRAY_BUFFER, billboard_vertex_buffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
-
-	// The VBO containing the positions and sizes of the particles
-	GLuint particles_position_buffer;
-	glGenBuffers(1, &particles_position_buffer);
-	glBindBuffer(GL_ARRAY_BUFFER, particles_position_buffer);
-	// Initialize with empty (NULL) buffer : it will be updated later, each frame.
-	glBufferData(GL_ARRAY_BUFFER, maxParticles * 4 * sizeof(GLfloat), NULL, GL_STREAM_DRAW);
-
-	// The VBO containing the colors of the particles
-	GLuint particles_color_buffer;
-	glGenBuffers(1, &particles_color_buffer);
-	glBindBuffer(GL_ARRAY_BUFFER, particles_color_buffer);
-	// Initialize with empty (NULL) buffer : it will be updated later, each frame.
-	glBufferData(GL_ARRAY_BUFFER, maxParticles * 4 * sizeof(GLubyte), NULL, GL_STREAM_DRAW);
+	StandardUpdater* updater = new StandardUpdater(mainCamera,glfwGetTime());
+	init = new StandardParticleInitializer(vec3(0,0,0), .6);
+	ParticlePool<Particle>* pool = new NaiveParticlePool<Particle>(maxParticles* 20);
+	spawnCurve = new TimeCurve(glfwGetTime(),1000/60,1000);
+	ParticleSystem<Particle>* particleSystem = new ParticleSystem<Particle>(pool,init,updater,spawnCurve,false);
+	renderer = new StandardParticleRenderer(particleSystem, mainCamera, textures[1]);
 
 
-/*	static const GLfloat g_vertex_buffer_data[] = {
-			-1.0f, -1.0f, 0.0f,
-			1.0f, -1.0f, -2.0f,
-			0.0f, 1.0f, -1.0f,
-	};
+	unsigned char minColor[4] = {100,100,100,100};
+	unsigned char maxColor[4] = {255,255,255,255};
 
-	GLuint vertexbuffer;
-	glGenBuffers(1, &vertexbuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data),	g_vertex_buffer_data, GL_STATIC_DRAW);*/
+	ParticleHandler<FountainInitializer, RandomColorInitializer, RandomSizeInitializer,
+	RandomLifetimeInitializer,NullInitializer,NullInitializer,ConstantForceUpdater, PhysicsUpdater, LifetimeUpdater>* handler =
+			new ParticleHandler<FountainInitializer, RandomColorInitializer, RandomSizeInitializer,
+			RandomLifetimeInitializer,NullInitializer,NullInitializer,ConstantForceUpdater, PhysicsUpdater, LifetimeUpdater>(glfwGetTime(),
+					FountainInitializer(vec3(0,0,0),vec3(0,10,0),0,.1,.3,5,10),
+					RandomColorInitializer(minColor, maxColor),
+					RandomSizeInitializer(.3,2),
+					RandomLifetimeInitializer(5,5),
+					ConstantForceUpdater(vec3(0,-1,0), false),
+					PhysicsUpdater(),
+					LifetimeUpdater());
 
-	Camera* camera = new Camera();
-	mainCamera = camera;
+	NaiveParticlePool<Particle>* pool2 = new NaiveParticlePool<Particle>(maxParticles * 20);
+	ParticleSystem<Particle>* particleSystem2 = new ParticleSystem<Particle>(pool2,handler,handler,spawnCurve, false);
+	StandardParticleRenderer* renderer2 = new StandardParticleRenderer(particleSystem2, mainCamera, textures[0]);
 
-	double lastTime = glfwGetTime();
+#ifdef MULTI_THREAD
+	ParticleEngine* particleEngine = new ParticleEngine();
+	particleEngine->addParticleSystem(particleSystem);
+	particleEngine->addParticleSystem(particleSystem2);
+#endif
+
+	//double lastTime = glfwGetTime();
 	/* Loop until the user closes the window */
 	while (!glfwWindowShouldClose(window))
 	{
-		double currentTime = glfwGetTime();
-		double delta = currentTime - lastTime;
-		lastTime = currentTime;
+//		double currentTime = glfwGetTime();
+//		double delta = currentTime - lastTime;
+//		lastTime = currentTime;
+		updater->setTime(glfwGetTime());
+		handler->updateDelta(glfwGetTime());
 
 		// Clear the screen
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		glm::vec3 cameraPosition = camera->getPosition();
-		glm::mat4 viewMatrix = camera->getViewMatrix();
-		glm::mat4 viewProjectionMatrix = camera->getProjectionMatrix() * viewMatrix;
+#ifndef MULTI_THREAD
+		particleSystem->step();
+		particleSystem2->step();
+		particleSystem->update();
+		particleSystem2->update();
+#else
+		particleEngine->step();
+#endif
 
-		spawnParticles(delta);
+		drawGrid();
+		renderer->render();
+		renderer2->render();
 
-		int nLivingParticles = updateParticles(delta, cameraPosition, g_particule_position_size_data, g_particule_color_data);
-
-		sortParticles();
-
-		/*// 1rst attribute buffer : vertices
-		glEnableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-		glVertexAttribPointer(
-				0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-				3,                  // size
-				GL_FLOAT,           // type
-				GL_FALSE,           // normalized?
-				0,                  // stride
-				(void*)0            // array buffer offset
-		);
-		// Draw the triangle !
-		glDrawArrays(GL_TRIANGLES, 0, 3); // 3 indices starting at 0 -> 1 triangle
-		glDisableVertexAttribArray(0);*/
-
-		glBindBuffer(GL_ARRAY_BUFFER, particles_position_buffer);
-		glBufferData(GL_ARRAY_BUFFER, maxParticles * 4 * sizeof(GLfloat), NULL, GL_STREAM_DRAW); // Buffer orphaning, a common way to improve streaming perf. See above link for details.
-		glBufferSubData(GL_ARRAY_BUFFER, 0, nLivingParticles * sizeof(GLfloat) * 4, g_particule_position_size_data);
-
-		glBindBuffer(GL_ARRAY_BUFFER, particles_color_buffer);
-		glBufferData(GL_ARRAY_BUFFER, maxParticles * 4 * sizeof(GLubyte), NULL, GL_STREAM_DRAW); // Buffer orphaning, a common way to improve streaming perf. See above link for details.
-		glBufferSubData(GL_ARRAY_BUFFER, 0, nLivingParticles * sizeof(GLubyte) * 4, g_particule_color_data);
-
-
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-		// Use our shader
-		glUseProgram(programID);
-
-		// Bind our texture in Texture Unit 0
-		//glActiveTexture(GL_TEXTURE0);
-		//glBindTexture(GL_TEXTURE_2D, Texture);
-		// Set our "myTextureSampler" sampler to user Texture Unit 0
-		//glUniform1i(TextureID, 0);
-
-		// Same as the billboards tutorial
-		glUniform3f(CameraRight_worldspace_ID, viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]);
-		glUniform3f(CameraUp_worldspace_ID   , viewMatrix[0][1], viewMatrix[1][1], viewMatrix[2][1]);
-		glUniformMatrix4fv(ViewProjMatrixID, 1, GL_FALSE, &viewProjectionMatrix[0][0]);
-
-		// 1rst attribute buffer : vertices
-		glEnableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, billboard_vertex_buffer);
-		glVertexAttribPointer(
-				0,                  // attribute. No particular reason for 0, but must match the layout in the shader.
-				3,                  // size
-				GL_FLOAT,           // type
-				GL_FALSE,           // normalized?
-				0,                  // stride
-				(void*)0            // array buffer offset
-		);
-
-		// 2nd attribute buffer : positions of particles' centers
-		glEnableVertexAttribArray(1);
-		glBindBuffer(GL_ARRAY_BUFFER, particles_position_buffer);
-		glVertexAttribPointer(
-				1,                                // attribute. No particular reason for 1, but must match the layout in the shader.
-				4,                                // size : x + y + z + size => 4
-				GL_FLOAT,                         // type
-				GL_FALSE,                         // normalized?
-				0,                                // stride
-				(void*)0                          // array buffer offset
-		);
-
-		// 3rd attribute buffer : particles' colors
-		glEnableVertexAttribArray(2);
-		glBindBuffer(GL_ARRAY_BUFFER, particles_color_buffer);
-		glVertexAttribPointer(
-				2,                                // attribute. No particular reason for 1, but must match the layout in the shader.
-				4,                                // size : r + g + b + a => 4
-				GL_UNSIGNED_BYTE,                 // type
-				GL_TRUE,                          // normalized?    *** YES, this means that the unsigned char[4] will be accessible with a vec4 (floats) in the shader ***
-				0,                                // stride
-				(void*)0                          // array buffer offset
-		);
-
-		// These functions are specific to glDrawArrays*Instanced*.
-		// The first parameter is the attribute buffer we're talking about.
-		// The second parameter is the "rate at which generic vertex attributes advance when rendering multiple instances"
-		// http://www.opengl.org/sdk/docs/man/xhtml/glVertexAttribDivisor.xml
-		glVertexAttribDivisor(0, 0); // particles vertices : always reuse the same 4 vertices -> 0
-		glVertexAttribDivisor(1, 1); // positions : one per quad (its center)                 -> 1
-		glVertexAttribDivisor(2, 1); // color : one per quad                                  -> 1
-
-		// Draw the particles !
-		// This draws many times a small triangle_strip (which looks like a quad).
-		// This is equivalent to :
-		// for(i in ParticlesCount) : glDrawArrays(GL_TRIANGLE_STRIP, 0, 4),
-		// but faster.
-		glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, nLivingParticles);
-
-		glDisableVertexAttribArray(0);
-		glDisableVertexAttribArray(1);
-		glDisableVertexAttribArray(2);
-
-
-		/* Swap front and back buffers */
 		glfwSwapBuffers(window);
-		/* Poll for and process events */
 		glfwPollEvents();
+		keyCallback(window,0,0,0,0);
 	}
 
-	delete[] g_particule_position_size_data;
-	delete camera;
-
-	// Cleanup VBO and shaders
-	glDeleteBuffers(1, &particles_color_buffer);
-	glDeleteBuffers(1, &particles_position_buffer);
-	glDeleteBuffers(1, &billboard_vertex_buffer);
-	glDeleteProgram(programID);
-	//glDeleteTextures(1, &Texture);
-	//glDeleteBuffers(1, &vertexbuffer);
+	delete mainCamera;
+#ifdef MULTI_THREAD
+	delete particleEngine;
+#endif
 	glDeleteVertexArrays(1, &VertexArrayID);
-
+	glDeleteTextures(NUM_TEXTURES,&textures[1]);
 	glfwTerminate();
+
 	return 0;
 }
