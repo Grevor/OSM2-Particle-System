@@ -69,7 +69,7 @@ public:
 		//Update. Yes, its strange as hell.
 		vec3 deltaPos = attractor - p->pos;
 		if(power != 0) p->speed += normalize(deltaPos) * power * delta;// * length(deltaPos) * .5f;
-		//else p->speed += vec3(0,-delta,0);
+		//else p->speed += vec3(0,-delta * .05,0);
 		p->pos += p->speed * delta;
 
 		//Check max distance

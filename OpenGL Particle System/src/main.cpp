@@ -44,7 +44,7 @@ using namespace std;
 #define MAX_FPS 60
 #define SPAWN_INCREASE 1000
 
-const int maxParticles = 100000;
+const int maxParticles = 10000;
 
 GLFWwindow* window;
 Camera* mainCamera;
@@ -52,18 +52,16 @@ StandardParticleRenderer* renderer;
 StandardParticleInitializer* init;
 DustSphere::AttractorUpdater* attractorUpdater;
 TimeCurve* spawnCurve;
+vec3 dustSpherePos = {0,20, 0};
 float anglePerSec = .6, posPerSec = 8;
 float terrainSize = 100;
 double lastTime = 0;
 #define NUM_TEXTURES 3
 GLuint textures[5];
+bool willDrawGrid = true;
 
 inline bool keyIsPressed(GLFWwindow* window, int keyCode) {
 	return glfwGetKey(window, keyCode) != 0; //== GLFW_PRESS || glfwGetKey(window, keyCode) == GLFW_REPEAT;
-}
-
-vec3 getDeltaVector() {
-	return vec3(.07,0,0);
 }
 
 void getMousePosition(GLFWwindow* win, double* x, double* y) {
@@ -173,9 +171,13 @@ static void keyCallback(GLFWwindow* window, int key, int scancode, int action, i
 		vec3 right = mainCamera->getRightVector();
 		vec3 up = cross(right, mainCamera->getForwardVector());
 
-		attractorUpdater->setAttractorPos(vec3(15,0,0) + normalize(right) * (normX - .5f) * 5.f - normalize(up) * (normY -.5f) * 5.f);
+		attractorUpdater->setAttractorPos(dustSpherePos + normalize(right) * (normX - .5f) * 5.f - normalize(up) * (normY -.5f) * 5.f);
 	} else {
 		attractorUpdater->setAttractorPower(0);
+	}
+
+	if(keyIsPressed(window, GLFW_KEY_DELETE)) {
+		willDrawGrid = !willDrawGrid;
 	}
 }
 
@@ -222,6 +224,19 @@ int main(void) {
 	int width = mode->width-6;
 	int height = mode->height-60;
 	mainCamera = new Camera(vec3(0,2,-5), 0, 0, (float)width/height, 45.0f, 100.0f);
+
+	//1 for yellyshroom, 0 for awesome on the attractorPos.y
+	attractorUpdater = new DustSphere::AttractorUpdater(dustSpherePos, dustSpherePos, 5);
+	attractorUpdater->setAttractorPower(0);
+
+#define DUST_SPHERE_PARTICLES 200000
+	unsigned char dustColor[4] = {255,255,255,100};
+	ParticleSystem<Particle>* particleSystem3 = new ParticleSystem<Particle>(DUST_SPHERE_PARTICLES,
+			new DustSphere::SphereInitializer(dustSpherePos,5,dustColor,.05),
+			attractorUpdater,
+			new DustSphere::AllAtOnceSpawnCurve(DUST_SPHERE_PARTICLES));
+
+
 
 	/* Create a windowed mode window and its OpenGL context */
 	window = glfwCreateWindow(width, height, "Particle System Demo", NULL, NULL);
@@ -288,18 +303,6 @@ int main(void) {
 	ParticleSystem<Particle>* particleSystem2 = new ParticleSystem<Particle>(pool2,handler,handler,spawnCurve, false);
 	StandardParticleRenderer* renderer2 = new StandardParticleRenderer(particleSystem2, mainCamera, textures[0]);*/
 
-
-	//1 for yellyshroom, 0 for awesome on the attractorPos.y
-	attractorUpdater = new DustSphere::AttractorUpdater(vec3(15,0,0),vec3(15,0,0), 5);
-	attractorUpdater->setAttractorPower(0);
-
-#define DUST_SPHERE_PARTICLES 20000
-	unsigned char dustColor[4] = {0,255,255,100};
-	ParticleSystem<Particle>* particleSystem3 = new ParticleSystem<Particle>(DUST_SPHERE_PARTICLES,
-			new DustSphere::SphereInitializer(vec3(15,0,0),5,dustColor,.05),
-			attractorUpdater,
-			new DustSphere::AllAtOnceSpawnCurve(DUST_SPHERE_PARTICLES));
-
 	StandardParticleRenderer* renderer3 = new StandardParticleRenderer(particleSystem3, mainCamera, textures[1]);
 
 #ifdef MULTI_THREAD
@@ -342,7 +345,7 @@ int main(void) {
 		particleEngine->step();
 #endif
 
-		drawGrid();
+		if(willDrawGrid) drawGrid();
 		renderer->render();
 		//renderer2->render();
 		renderer3->render();

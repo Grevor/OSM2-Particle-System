@@ -46,6 +46,7 @@ public:
 		for(int i= 0; i < 4; i++) {
 			this->minColor[i] = minColor[i];
 			this->deltaColor[i] = maxColor[i] - minColor[i];
+			if(deltaColor[i] == 0) deltaColor[i] = 1;
 		}
 	}
 
@@ -56,12 +57,10 @@ public:
 		p->a = rand() % deltaColor[3] + minColor[3];
 	}
 
-	inline unsigned char getRandomColor(){
-		unsigned char randColor[4];
+	inline void getRandomColor(unsigned char* randColor){
 		for(int i = 0; i < 4; i++){
 			randColor[i] = (rand() % deltaColor[i] + minColor[i]);
 		}
-		return randColor;
 	}
 };
 
@@ -87,7 +86,7 @@ public:
 	inline vec3 getRandomSpherePosition(){
 		vec3 randPos = glm::sphericalRand(delta);
 		vec3 norm = randPos;
-		glm:normalize(norm);
+		glm::normalize(norm);
 		norm*=min;
 		randPos = randPos + norm + middle;
 

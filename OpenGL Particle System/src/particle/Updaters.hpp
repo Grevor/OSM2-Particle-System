@@ -86,7 +86,12 @@ class OscilatingColorUpdater {
 public:
 
 	OscilatingColorUpdater() :
-	OscilatingColorUpdater(linearRand(0.f,5.f),linearRand(0.f,5.f), linearRand(0.f,5.f)){
+		OscilatingColorUpdater(.0,.5){
+
+	}
+
+	OscilatingColorUpdater(double minFreq, double maxFreq) :
+		OscilatingColorUpdater(linearRand(minFreq, maxFreq),linearRand(minFreq, maxFreq), linearRand(minFreq, maxFreq)){
 
 	}
 
