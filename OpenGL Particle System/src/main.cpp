@@ -13,7 +13,9 @@
 #include <stdlib.h>
 #include <algorithm>
 
+#ifdef MULTI_THREAD
 #include <boost/thread/thread.hpp>
+#endif
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -31,6 +33,7 @@
 #include "particle/ParticleHandler.hpp"
 #include "particle/SampleInitializers.hpp"
 #include "particle/Updaters.hpp"
+#include "attractor/DustSphere.hpp"
 #ifdef MULTI_THREAD
 #include "ParticleEngine.hpp"
 #endif
@@ -41,12 +44,13 @@ using namespace std;
 #define MAX_FPS 60
 #define SPAWN_INCREASE 1000
 
-const int maxParticles = 10000;
+const int maxParticles = 100000;
 
 GLFWwindow* window;
 Camera* mainCamera;
 StandardParticleRenderer* renderer;
 StandardParticleInitializer* init;
+DustSphere::AttractorUpdater* attractorUpdater;
 TimeCurve* spawnCurve;
 float anglePerSec = .6, posPerSec = 8;
 float terrainSize = 100;
@@ -56,6 +60,27 @@ GLuint textures[5];
 
 inline bool keyIsPressed(GLFWwindow* window, int keyCode) {
 	return glfwGetKey(window, keyCode) != 0; //== GLFW_PRESS || glfwGetKey(window, keyCode) == GLFW_REPEAT;
+}
+
+vec3 getDeltaVector() {
+	return vec3(.07,0,0);
+}
+
+void getMousePosition(GLFWwindow* win, double* x, double* y) {
+	glfwGetCursorPos(win, x,y);
+}
+
+void getNormMousePosition(GLFWwindow* win, float* x, float* y) {
+	double px, py;
+	int w,h;
+	getMousePosition(win, &px,&py);
+	//glfwGetWindowPos(win, &xx, &yy);
+
+	glfwGetWindowSize(win,&w,&h);
+
+	*x = (float)(px / w);
+	*y = (float)(py / h);
+
 }
 
 static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -129,6 +154,28 @@ static void keyCallback(GLFWwindow* window, int key, int scancode, int action, i
 	}
 	if(keyIsPressed(window, GLFW_KEY_PERIOD)) {
 		spawnCurve->addIntensity(-spawnAmountDelta,-spawnAmountDelta/MAX_FPS);
+	}
+
+	if(keyIsPressed(window, GLFW_KEY_Z)) {
+		attractorUpdater->setAttractorPower(5);
+	}
+	if(keyIsPressed(window, GLFW_KEY_X)) {
+		attractorUpdater->setAttractorPower(.5);
+	}
+
+
+	if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT)) {
+		//attractorUpdater->setAttractorPos(attractorUpdater->getAttractorPos() + getDeltaVector());
+		attractorUpdater->setAttractorPower(10);
+
+		float normX,normY;
+		getNormMousePosition(window, &normX, &normY);
+		vec3 right = mainCamera->getRightVector();
+		vec3 up = cross(right, mainCamera->getForwardVector());
+
+		attractorUpdater->setAttractorPos(vec3(15,0,0) + normalize(right) * (normX - .5f) * 5.f - normalize(up) * (normY -.5f) * 5.f);
+	} else {
+		attractorUpdater->setAttractorPower(0);
 	}
 }
 
@@ -216,13 +263,13 @@ int main(void) {
 
 	StandardUpdater* updater = new StandardUpdater(mainCamera,glfwGetTime());
 	init = new StandardParticleInitializer(vec3(0,0,0), .6);
-	ParticlePool<Particle>* pool = new NaiveParticlePool<Particle>(maxParticles* 20);
+	ParticlePool<Particle>* pool = new NaiveParticlePool<Particle>(maxParticles);
 	spawnCurve = new TimeCurve(1000/60,1000);
 	ParticleSystem<Particle>* particleSystem = new ParticleSystem<Particle>(pool,init,updater,spawnCurve,false);
 	renderer = new StandardParticleRenderer(particleSystem, mainCamera, textures[1]);
 
 
-	unsigned char minColor[4] = {100,100,100,100};
+	/*unsigned char minColor[4] = {100,100,100,100};
 	unsigned char maxColor[4] = {255,255,255,255};
 
 	ParticleHandler<FountainInitializer, RandomColorInitializer, RandomSizeInitializer,
@@ -239,12 +286,27 @@ int main(void) {
 
 	NaiveParticlePool<Particle>* pool2 = new NaiveParticlePool<Particle>(maxParticles * 20);
 	ParticleSystem<Particle>* particleSystem2 = new ParticleSystem<Particle>(pool2,handler,handler,spawnCurve, false);
-	StandardParticleRenderer* renderer2 = new StandardParticleRenderer(particleSystem2, mainCamera, textures[0]);
+	StandardParticleRenderer* renderer2 = new StandardParticleRenderer(particleSystem2, mainCamera, textures[0]);*/
+
+
+	//1 for yellyshroom, 0 for awesome on the attractorPos.y
+	attractorUpdater = new DustSphere::AttractorUpdater(vec3(15,0,0),vec3(15,0,0), 5);
+	attractorUpdater->setAttractorPower(0);
+
+#define DUST_SPHERE_PARTICLES 20000
+	unsigned char dustColor[4] = {0,255,255,100};
+	ParticleSystem<Particle>* particleSystem3 = new ParticleSystem<Particle>(DUST_SPHERE_PARTICLES,
+			new DustSphere::SphereInitializer(vec3(15,0,0),5,dustColor,.05),
+			attractorUpdater,
+			new DustSphere::AllAtOnceSpawnCurve(DUST_SPHERE_PARTICLES));
+
+	StandardParticleRenderer* renderer3 = new StandardParticleRenderer(particleSystem3, mainCamera, textures[1]);
 
 #ifdef MULTI_THREAD
 	ParticleEngine* particleEngine = new ParticleEngine();
 	particleEngine->addParticleSystem(particleSystem);
 	particleEngine->addParticleSystem(particleSystem2);
+	particleEngine->addParticleSystem(particlleSystem3);
 #endif
 
 	double timePerFrame = 1.0/MAX_FPS;
@@ -256,30 +318,34 @@ int main(void) {
 		newTime = glfwGetTime();
 		double deltaTime = newTime - previousTime;
 		previousTime = newTime;
-
+#ifdef MULTI_THREAD
 		if (deltaTime < timePerFrame) {
 			boost::this_thread::sleep(boost::posix_time::microseconds((timePerFrame - deltaTime)*1000000));
 		}
-
+#endif
 		updater->setTime(newTime);
-		handler->updateDelta(newTime);
+		//handler->updateDelta(newTime);
 		spawnCurve->update(deltaTime);
+		attractorUpdater->setDeltaTime(deltaTime);
 
 		// Clear the screen
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 #ifndef MULTI_THREAD
 		particleSystem->step();
-		particleSystem2->step();
+		//particleSystem2->step();
+		particleSystem3->step();
 		particleSystem->update();
-		particleSystem2->update();
+		//particleSystem2->update();
+		particleSystem3->update();
 #else
 		particleEngine->step();
 #endif
 
 		drawGrid();
 		renderer->render();
-		renderer2->render();
+		//renderer2->render();
+		renderer3->render();
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

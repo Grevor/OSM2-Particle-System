@@ -31,6 +31,8 @@ public:
 	void move(float forwardAmount, float rightAmount, float upAngle, float leftAngle);
 	void move(float forward, float right, float up, float upAngle, float leftAngle);
 	vec3 getPosition();
+	vec3 getForwardVector();
+	vec3 getRightVector();
 	mat4 getViewMatrix();
 	mat4 getProjectionMatrix();
 private:

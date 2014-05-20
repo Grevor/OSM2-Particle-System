@@ -117,3 +117,19 @@ void Camera::updateViewMatrix(vec3 forward, vec3 up) {
 void Camera::updateProjectionMatrix() {
 	this->projectionMatrix = glm::perspective(fovy, aspect, 0.1f, viewDistance);
 }
+
+vec3 Camera::getForwardVector() {
+	return vec3(
+			cos(verticalAngle) * sin(horizontalAngle),
+			sin(verticalAngle),
+			cos(verticalAngle) * cos(horizontalAngle)
+	);
+}
+
+vec3 Camera::getRightVector() {
+	return vec3(
+				sin(horizontalAngle - 3.14f/2.0f),
+				0,
+				cos(horizontalAngle - 3.14f/2.0f)
+		);
+}

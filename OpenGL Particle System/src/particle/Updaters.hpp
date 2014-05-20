@@ -80,5 +80,33 @@ public:
 	}
 };
 
+class OscilatingColorUpdater {
+	double t;
+	double r,g,b;
+public:
+
+	OscilatingColorUpdater() :
+	OscilatingColorUpdater(linearRand(0.f,5.f),linearRand(0.f,5.f), linearRand(0.f,5.f)){
+
+	}
+
+	OscilatingColorUpdater(double oscR, double oscG, double oscB) {
+		t = 0;
+		r = oscR;
+		g = oscG;
+		b = oscB;
+	}
+
+	void addTime(double delta) {
+		this->t += delta;
+	}
+
+	void getRandomColor(unsigned char* color) {
+		color[0] = (unsigned char) (255.0 * (1 + sin(t * r)) * .5);
+		color[1] = (unsigned char) (255.0 * (1 + sin(t * g)) * .5);
+		color[2] = (unsigned char) (255.0 * (1 + sin(t * b)) * .5);
+	}
+};
+
 
 #endif /* UPDATERS_HPP_ */
