@@ -12,6 +12,10 @@ MKDIR_COMMAND= mkdir -p
 demo: depend $(OBJ)
 	$(COMPILER) $(FLAGS) $(SRC_FOLDER)/demo.cpp -o "demo.exe" 
 	
+particleEngine:
+	$(MKDIR_COMMAND) $(OBJ_FOLDER)
+	$(COMPILER) -c $(SRC_FOLDER)/ParticleEngine.cpp -o $(OBJ_FOLDER)/particleEngine.o "C:/MinGW/lib/libboost_thread-vc110-mt-1_55.lib" $(FLAGS)
+	
 fire: depend $(OBJ)
 	$(COMPILER) $(FLAGS) $(SRC_FOLDER)/fire/main.cpp -o "fire.exe" 
 
