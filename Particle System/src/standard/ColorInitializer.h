@@ -8,11 +8,11 @@
 #ifndef COLORINITIALIZER_H_
 #define COLORINITIALIZER_H_
 
-#include <Eigen/Eigen>
+//#include <Eigen/Eigen>
 #include "StandardParticle.hpp"
 #include "../ParticleInitializer.h"
-#include <time.h>
-#include <stdlib.h>
+//#include <time.h>
+//#include <stdlib.h>
 
 class ColorInitializer : public ParticleInitializer<StandardParticle>{
 	const Vector3f* colorVectorMin, colorVectorMax, colorVector;
