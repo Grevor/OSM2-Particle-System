@@ -15,6 +15,7 @@
 #include "ParticlePool.h"
 #include "ReadableParticlePool.h"
 #include "ParticleUpdater.h"
+#include "NaiveParticlePool.h"
 #include <stdlib.h>
 #include <boost/atomic/atomic.hpp>
 #include <assert.h>
@@ -39,11 +40,11 @@ class ParticleSystem : public IterationUpdateable {
 	//boost::atomic_int_fast64_t
 	atomic<int64_t> newParticlesLeftToSpawn;
 	Curve<long,long>* spawnCurve;
-	bool loopingSystem, alive;
+	bool deletePool, alive;
 
 public:
 	ParticleSystem(ParticlePool<Particle>* pool, ParticleInitializer<Particle>* init,
-			ParticleUpdater<Particle>* updater, Curve<long,long>* spawnCurve, bool looping) {
+			ParticleUpdater<Particle>* updater, Curve<long,long>* spawnCurve, bool deletePoolWhenDone) {
 		assert(pool != NULL);
 		assert(init != NULL);
 		assert(updater != NULL);
@@ -53,7 +54,7 @@ public:
 		this->initializer = init;
 		this->updater = updater;
 		this->spawnCurve = spawnCurve;
-		this->loopingSystem = looping;
+		this->deletePool = deletePoolWhenDone;
 		this->allocationIterator = NULL;
 		this->updateIterator = NULL;
 		this->alive = true;
@@ -61,8 +62,12 @@ public:
 		this->reset();
 	}
 
-	virtual ~ParticleSystem() {
+	ParticleSystem(int poolSize, ParticleInitializer<Particle>* init,
+			ParticleUpdater<Particle>* updater, Curve<long,long>* spawnCurve) :
+				ParticleSystem(new NaiveParticlePool<Particle>(poolSize), init, updater, spawnCurve, true) {}
 
+	virtual ~ParticleSystem() {
+		if(deletePool) delete pool;
 	}
 
 	/**
@@ -118,15 +123,6 @@ public:
 		long workunitsAllowed = PARTICLE_SYSTEM_WORK_PER_THREAD_STATIC;
 		workunitsAllowed = this->createNewParticles(workunitsAllowed);
 		updateParticles(updateStep, workunitsAllowed);
-	}
-
-	/**
-	 * Check if this ParticleSystem is looping, indicating that it will keep spawning
-	 * particles and never die, unless it's forced to do so.
-	 * @return true if looping, else false
-	 */
-	bool isLooping() {
-		return loopingSystem;
 	}
 
 	/**

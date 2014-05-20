@@ -46,6 +46,7 @@ public:
 		for(int i= 0; i < 4; i++) {
 			this->minColor[i] = minColor[i];
 			this->deltaColor[i] = maxColor[i] - minColor[i];
+			if(deltaColor[i] == 0) deltaColor[i] = 1;
 		}
 	}
 
@@ -56,12 +57,10 @@ public:
 		p->a = rand() % deltaColor[3] + minColor[3];
 	}
 
-	inline unsigned char getRandomColor(){
-		unsigned char randColor[4];
+	inline void getRandomColor(unsigned char* dst){
 		for(int i = 0; i < 4; i++){
-			randColor[i] = (rand() % deltaColor[i] + minColor[i]);
+			dst[i] = (rand() % deltaColor[i] + minColor[i]);
 		}
-		return randColor;
 	}
 };
 
@@ -87,7 +86,7 @@ public:
 	inline vec3 getRandomSpherePosition(){
 		vec3 randPos = glm::sphericalRand(delta);
 		vec3 norm = randPos;
-		glm:normalize(norm);
+		glm::normalize(norm);
 		norm*=min;
 		randPos = randPos + norm + middle;
 
@@ -244,6 +243,30 @@ class NullInitializer {
 public:
 	inline void init(Particle* p) {
 		(void)p;
+	}
+};
+
+class GaussianSphereInitializer {
+	vec3 middle, distribution;
+public:
+	vec3 getPosition() {
+		return glm::gaussRand(middle,distribution);
+	}
+};
+
+class OnSphereInitializer {
+	float radius;
+	vec3 middle;
+public:
+	OnSphereInitializer(vec3 middle, float rad) {
+		this->radius = rad;
+		this->middle = middle;
+	}
+
+	void setMiddle(vec3 newMiddle) { this->middle = newMiddle; }
+
+	inline vec3 getPosition() {
+		return glm::sphericalRand(radius) + middle;
 	}
 };
 
