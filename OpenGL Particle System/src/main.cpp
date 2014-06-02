@@ -45,7 +45,7 @@
 
 using namespace glm;
 using namespace std;
-using namespace Fireworks;
+//using namespace Fireworks;
 
 #define MAX_FPS 60
 #define SPAWN_INCREASE 3000 //1000 for demo.
