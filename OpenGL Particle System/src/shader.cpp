@@ -84,7 +84,7 @@ GLuint loadShaders(const char * vertex_file_path,const char * fragment_file_path
 		return 0;
 	}
 
-	GLint Result = GL_FALSE;
+	GLint isCompiled = GL_FALSE;
 	int InfoLogLength;
 
 
@@ -96,14 +96,19 @@ GLuint loadShaders(const char * vertex_file_path,const char * fragment_file_path
 	glCompileShader(VertexShaderID);
 
 	// Check Vertex Shader
-	glGetShaderiv(VertexShaderID, GL_COMPILE_STATUS, &Result);
-	glGetShaderiv(VertexShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-	if ( InfoLogLength > 0 ){
-		std::vector<char> VertexShaderErrorMessage(InfoLogLength+1);
-		glGetShaderInfoLog(VertexShaderID, InfoLogLength, NULL, &VertexShaderErrorMessage[0]);
-		std::cout << &VertexShaderErrorMessage[0] << endl;
+	glGetShaderiv(VertexShaderID, GL_COMPILE_STATUS, &isCompiled);
+	if (isCompiled == GL_FALSE) {
+		std::cout << "Compilation failed:" << endl;
+		glGetShaderiv(VertexShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
+		if ( InfoLogLength > 0 ){
+			std::vector<char> VertexShaderErrorMessage(InfoLogLength+1);
+			glGetShaderInfoLog(VertexShaderID, InfoLogLength, NULL, &VertexShaderErrorMessage[0]);
+			std::cout << &VertexShaderErrorMessage[0] << endl;
+		}
 	}
-
+	else {
+		std::cout << "Compilation successful." << endl << endl;
+	}
 
 
 	// Compile Fragment Shader
@@ -113,14 +118,19 @@ GLuint loadShaders(const char * vertex_file_path,const char * fragment_file_path
 	glCompileShader(FragmentShaderID);
 
 	// Check Fragment Shader
-	glGetShaderiv(FragmentShaderID, GL_COMPILE_STATUS, &Result);
-	glGetShaderiv(FragmentShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-	if ( InfoLogLength > 0 ){
-		std::vector<char> FragmentShaderErrorMessage(InfoLogLength+1);
-		glGetShaderInfoLog(FragmentShaderID, InfoLogLength, NULL, &FragmentShaderErrorMessage[0]);
-		std::cout << &FragmentShaderErrorMessage[0] << endl;
+	glGetShaderiv(FragmentShaderID, GL_COMPILE_STATUS, &isCompiled);
+	if (isCompiled == GL_FALSE) {
+		std::cout << "Compilation failed:" << endl;
+		glGetShaderiv(FragmentShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
+		if ( InfoLogLength > 0 ){
+			std::vector<char> FragmentShaderErrorMessage(InfoLogLength+1);
+			glGetShaderInfoLog(FragmentShaderID, InfoLogLength, NULL, &FragmentShaderErrorMessage[0]);
+			std::cout << &FragmentShaderErrorMessage[0] << endl;
+		}
 	}
-
+	else {
+		std::cout << "Compilation successful." << endl << endl;
+	}
 
 
 	// Link the program
@@ -131,12 +141,18 @@ GLuint loadShaders(const char * vertex_file_path,const char * fragment_file_path
 	glLinkProgram(ProgramID);
 
 	// Check the program
-	glGetProgramiv(ProgramID, GL_LINK_STATUS, &Result);
-	glGetProgramiv(ProgramID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-	if ( InfoLogLength > 0 ){
-		std::vector<char> ProgramErrorMessage(InfoLogLength+1);
-		glGetProgramInfoLog(ProgramID, InfoLogLength, NULL, &ProgramErrorMessage[0]);
-		cout << &ProgramErrorMessage[0] << endl;
+	glGetProgramiv(ProgramID, GL_LINK_STATUS, &isCompiled);
+	if (isCompiled == GL_FALSE) {
+		std::cout << "Linking failed:" << endl;
+		glGetProgramiv(ProgramID, GL_INFO_LOG_LENGTH, &InfoLogLength);
+		if ( InfoLogLength > 0 ){
+			std::vector<char> ProgramErrorMessage(InfoLogLength+1);
+			glGetProgramInfoLog(ProgramID, InfoLogLength, NULL, &ProgramErrorMessage[0]);
+			cout << &ProgramErrorMessage[0] << endl;
+		}
+	}
+	else {
+		std::cout << "Linking successful." << endl;
 	}
 
 	glDeleteShader(VertexShaderID);
