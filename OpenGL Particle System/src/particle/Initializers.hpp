@@ -41,7 +41,11 @@ class RandomColorInitializer {
 	unsigned char deltaColor[4];
 
 public:
-	RandomColorInitializer(unsigned char minColor[4], unsigned char maxColor[4]) {
+	RandomColorInitializer() {
+
+	}
+
+	RandomColorInitializer(const unsigned char minColor[4], const unsigned char maxColor[4]) {
 
 		for(int i= 0; i < 4; i++) {
 			this->minColor[i] = minColor[i];
@@ -84,7 +88,7 @@ public:
 	}
 	//Kan vara megasuperdunder FEL!
 	inline vec3 getRandomSpherePosition(){
-		vec3 randPos = glm::sphericalRand(delta);
+		vec3 randPos = glm::sphericalRand(delta) * linearRand<float>(0,1);
 		vec3 norm = randPos;
 		glm::normalize(norm);
 		norm*=min;
@@ -204,7 +208,7 @@ public:
 		return part->life;
 	}
 	inline float getRandomLifetime(){
-		float randLife = min + delta * (float)rand() / RAND_MAX; // RAND_MAX from linearRand(0,1)??
+		float randLife = min + linearRand<float>(0,delta); // RAND_MAX from linearRand(0,1)??
 		return randLife;
 	}
 };

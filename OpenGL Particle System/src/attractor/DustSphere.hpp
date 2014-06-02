@@ -12,6 +12,7 @@
 #include "ParticleInitializer.h"
 #include "ParticleUpdater.h"
 #include "../particle/Initializers.hpp"
+#include "../particle/SpawnCurves.hpp"
 #include "../Particle.hpp"
 
 namespace DustSphere {
@@ -82,21 +83,6 @@ public:
 
 		colorUpdater.getRandomColor(&p->r);
 		return false;
-	}
-};
-
-
-
-class AllAtOnceSpawnCurve : public Curves::Curve<long,long> {
-	long p;
-public:
-	AllAtOnceSpawnCurve(long particles) {
-		p = particles;
-	}
-
-	long getValue(long currentIter) override {
-		if(currentIter <= 1) return p;
-		else return 0;
 	}
 };
 

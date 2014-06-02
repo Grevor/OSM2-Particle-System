@@ -34,15 +34,21 @@
 #include "particle/SampleInitializers.hpp"
 #include "particle/Updaters.hpp"
 #include "attractor/DustSphere.hpp"
+//#include "fireworks/Fireworks.h"
+#include "fire/FireHandler.hpp"
+#include "fire/FireParticle.hpp"
+#include "smoke/SmokeHandler.hpp"
+#include <ConstantCurve.h>
 #ifdef MULTI_THREAD
 #include "ParticleEngine.hpp"
 #endif
 
 using namespace glm;
 using namespace std;
+using namespace Fireworks;
 
 #define MAX_FPS 60
-#define SPAWN_INCREASE 1000
+#define SPAWN_INCREASE 3000 //1000 for demo.
 
 const int maxParticles = 10000;
 
@@ -52,6 +58,8 @@ StandardParticleRenderer* renderer;
 StandardParticleInitializer* init;
 DustSphere::AttractorUpdater* attractorUpdater;
 TimeCurve* spawnCurve;
+FireHandler* fire;
+SmokeHandler* smoke;
 vec3 dustSpherePos = {0,20, 0};
 float anglePerSec = .6, posPerSec = 8;
 float terrainSize = 100;
@@ -79,6 +87,19 @@ void getNormMousePosition(GLFWwindow* win, float* x, float* y) {
 	*x = (float)(px / w);
 	*y = (float)(py / h);
 
+}
+
+static void keyCallback2(GLFWwindow* window, int key, int scancode, int action, int mods) {
+	if(key == GLFW_KEY_DELETE && action == GLFW_PRESS) willDrawGrid = ! willDrawGrid;
+	else if( key == GLFW_KEY_F1 && action == GLFW_PRESS) {
+		if(glm::length(fire->outsideForce) != 0) {
+			fire->outsideForce = vec3(0,0,0);
+			smoke->outsideForce = vec3(0,0,0);
+		} else {
+			fire->outsideForce = vec3(linearRand<float>(1,4),0,linearRand<float>(1,4));
+			smoke->outsideForce = fire->outsideForce;
+		}
+	}
 }
 
 static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -161,7 +182,6 @@ static void keyCallback(GLFWwindow* window, int key, int scancode, int action, i
 		attractorUpdater->setAttractorPower(.5);
 	}
 
-
 	if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT)) {
 		//attractorUpdater->setAttractorPos(attractorUpdater->getAttractorPos() + getDeltaVector());
 		attractorUpdater->setAttractorPower(10);
@@ -174,10 +194,6 @@ static void keyCallback(GLFWwindow* window, int key, int scancode, int action, i
 		attractorUpdater->setAttractorPos(dustSpherePos + normalize(right) * (normX - .5f) * 5.f - normalize(up) * (normY -.5f) * 5.f);
 	} else {
 		attractorUpdater->setAttractorPower(0);
-	}
-
-	if(keyIsPressed(window, GLFW_KEY_DELETE)) {
-		willDrawGrid = !willDrawGrid;
 	}
 }
 
@@ -224,19 +240,26 @@ int main(void) {
 	int width = mode->width-6;
 	int height = mode->height-60;
 	mainCamera = new Camera(vec3(0,2,-5), 0, 0, (float)width/height, 45.0f, 100.0f);
+	spawnCurve = new TimeCurve(1000/60,1000);
 
 	//1 for yellyshroom, 0 for awesome on the attractorPos.y
 	attractorUpdater = new DustSphere::AttractorUpdater(dustSpherePos, dustSpherePos, 5);
 	attractorUpdater->setAttractorPower(0);
 
-#define DUST_SPHERE_PARTICLES 200000
+#define DUST_SPHERE_PARTICLES 40000
 	unsigned char dustColor[4] = {255,255,255,100};
 	ParticleSystem<Particle>* particleSystem3 = new ParticleSystem<Particle>(DUST_SPHERE_PARTICLES,
 			new DustSphere::SphereInitializer(dustSpherePos,5,dustColor,.05),
 			attractorUpdater,
-			new DustSphere::AllAtOnceSpawnCurve(DUST_SPHERE_PARTICLES));
+			new AllAtOnceSpawnCurve(DUST_SPHERE_PARTICLES));
 
+	FireHandler fireHandler = FireHandler(1,1.4,.20,.4,vec3(30,0,10),.7);
+	fire = &fireHandler;
+	ParticleSystem<FireParticle>* fireSystem = new ParticleSystem<FireParticle>(10000, &fireHandler, &fireHandler,spawnCurve);
 
+	SmokeHandler smokeHandler = SmokeHandler(vec3(30,3,10),5,.3,.4,1);
+	smoke = &smokeHandler;
+	ParticleSystem<SmokeParticle>* smokeSystem = new ParticleSystem<SmokeParticle>(10000,&smokeHandler, &smokeHandler, spawnCurve);
 
 	/* Create a windowed mode window and its OpenGL context */
 	window = glfwCreateWindow(width, height, "Particle System Demo", NULL, NULL);
@@ -247,7 +270,7 @@ int main(void) {
 		return -1;
 	}
 
-	//glfwSetKeyCallback(window, keyCallback);
+	glfwSetKeyCallback(window, keyCallback2);
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 	glfwSetWindowSizeCallback(window, resizeCallback);
 	/* Make the window's context current */
@@ -279,7 +302,6 @@ int main(void) {
 	StandardUpdater* updater = new StandardUpdater(mainCamera,glfwGetTime());
 	init = new StandardParticleInitializer(vec3(0,0,0), .6);
 	ParticlePool<Particle>* pool = new NaiveParticlePool<Particle>(maxParticles);
-	spawnCurve = new TimeCurve(1000/60,1000);
 	ParticleSystem<Particle>* particleSystem = new ParticleSystem<Particle>(pool,init,updater,spawnCurve,false);
 	renderer = new StandardParticleRenderer(particleSystem, mainCamera, textures[1]);
 
@@ -305,13 +327,36 @@ int main(void) {
 
 	StandardParticleRenderer* renderer3 = new StandardParticleRenderer(particleSystem3, mainCamera, textures[1]);
 
+	StandardParticleRenderer* fireRenderer = new StandardParticleRenderer((ParticleSystem<Particle>*)fireSystem, mainCamera);
+	fireRenderer->setTexture(1);
+
+	StandardParticleRenderer* smokeRenderer = new StandardParticleRenderer((ParticleSystem<Particle>*)smokeSystem, mainCamera);
+	smokeRenderer->setTexture(1);
+
 #ifdef MULTI_THREAD
 	ParticleEngine* particleEngine = new ParticleEngine();
 	particleEngine->addParticleSystem(particleSystem);
-	particleEngine->addParticleSystem(particleSystem2);
-	particleEngine->addParticleSystem(particlleSystem3);
+	//particleEngine->addParticleSystem(particleSystem2);
+	particleEngine->addParticleSystem(particleSystem3);
+	particleEngine->addParticleSystem(fireSystem);
+	particleEngine->addParticleSystem(smokeSystem);
 #endif
+/*
+	RocketHandler rocketHandler = RocketHandler(vec3(5,0,0),3,
+#ifndef MULTI_THREAD
+			NULL
+#else
+			particleEngine
+#endif
+			,mainCamera);
+	ParticleSystem<Rocket>* fireworksSystem = new ParticleSystem<Rocket>(1,&rocketHandler,&rocketHandler,new ConstantCurve(1));
 
+	StandardParticleRenderer* renderer4 = new StandardParticleRenderer((ParticleSystem<Particle>*)fireworksSystem,mainCamera);
+
+#ifdef MULTI_THREAD
+	particleEngine->addParticleSystem(fireworksSystem);
+#endif
+*/
 	double timePerFrame = 1.0/MAX_FPS;
 	double previousTime = glfwGetTime();
 	double newTime = 0;
@@ -330,6 +375,9 @@ int main(void) {
 		//handler->updateDelta(newTime);
 		spawnCurve->update(deltaTime);
 		attractorUpdater->setDeltaTime(deltaTime);
+		//rocketHandler.setDelta((float)deltaTime);
+		fireHandler.setDeltaTime(deltaTime);
+		smokeHandler.setDelta(deltaTime);
 
 		// Clear the screen
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -349,6 +397,10 @@ int main(void) {
 		renderer->render();
 		//renderer2->render();
 		renderer3->render();
+		//renderer4->render();
+		//rocketHandler.render();
+		fireRenderer->render();
+		smokeRenderer->render();
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
