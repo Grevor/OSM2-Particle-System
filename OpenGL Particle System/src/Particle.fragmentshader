@@ -2,23 +2,51 @@
 
 // Interpolated values from the vertex shaders
 in vec2 UV;
-in vec4 particlecolor;
+in vec4 particleColor;
 in float animationFrame;
+flat in uint particleIndex;
 
 // Ouput data
 out vec4 color;
 
-uniform sampler2D textureSampler;
-uniform float textureBlend;
-uniform float textureFrameFactor;
+//uniform sampler2D textureSampler;
+//uniform float textureBlend;
+//uniform float textureFrameFactor;
+
+uniform sampler2D textureSampler[8];
+uniform float textureBlend[8];
+uniform float textureFrameFactor[8];
+
+
+//void main(){
+//	vec2 frameUV = UV * vec2(textureFrameFactor,1);
+//	float animFrame = animationFrame / textureFrameFactor;
+//	vec2 lowFrame = vec2(trunc(animFrame), 0) * textureFrameFactor;
+//	vec2 highFrame = lowFrame + vec2(textureFrameFactor, 0);
+//
+//	// Output color = color of the texture at the specified UV
+//	color = mix (mix(texture2D(textureSampler, lowFrame + frameUV), texture2D(textureSampler, highFrame + frameUV), animFrame - trunc(animFrame)) * particleColor, particleColor, textureBlend);
+//	//color = mix(texture2D(textureSampler, UV) * particleColor, particleColor, textureBlend);
+//}
 
 void main(){
-	vec2 frameUV = UV * vec2(textureFrameFactor,1);
-	float animFrame = animationFrame / textureFrameFactor;
-	vec2 lowFrame = vec2(trunc(animFrame), 0) * textureFrameFactor;
-	vec2 highFrame = lowFrame + vec2(textureFrameFactor, 0);
+	vec2 frameUV = UV * vec2(textureFrameFactor[particleIndex],1);
+	float animFrame = animationFrame / textureFrameFactor[particleIndex];
+	vec2 lowFrame = vec2(trunc(animFrame), 0) * textureFrameFactor[particleIndex];
+	vec2 highFrame = lowFrame + vec2(textureFrameFactor[particleIndex], 0);
 
 	// Output color = color of the texture at the specified UV
-	color = mix (mix(texture2D(textureSampler, lowFrame + frameUV), texture2D(textureSampler, highFrame + frameUV), animFrame - trunc(animFrame)) * particlecolor, particlecolor, textureBlend);
-	//color = mix(texture2D(textureSampler, UV) * particlecolor, particlecolor, textureBlend);
+	//color = mix (mix(texture2D(textureSampler[particleIndex], lowFrame + frameUV), texture2D(textureSampler[particleIndex], highFrame + frameUV), animFrame - trunc(animFrame)) * particleColor, particleColor, textureBlend[particleIndex]);
+
+	if (particleIndex == uint(0))
+		color = texture2D(textureSampler[0], UV) * particleColor;
+	else if (particleIndex == uint(0x3F800000)) //this is the 32 bit floating point representation of 1
+		color = texture2D(textureSampler[1], UV) * particleColor;
+	else if (particleIndex == uint(0x40000000)) //this is the 32 bit floating point representation of 2
+		color = texture2D(textureSampler[2], UV) * particleColor;
+	else if (particleIndex == uint(0x40400000)) //this is the 32 bit floating point representation of 3
+		color = texture2D(textureSampler[3], UV) * particleColor;
+	else
+		color = particleColor;
+	
 }

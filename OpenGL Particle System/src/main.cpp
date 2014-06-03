@@ -30,6 +30,8 @@
 #include "Initializer.hpp"
 #include "NaiveParticlePool.h"
 #include "texture.hpp"
+#include "ParticleMaterial.hpp"
+#include "RenderableParticleSystem.hpp"
 #include "particle/ParticleHandler.hpp"
 #include "particle/SampleInitializers.hpp"
 #include "particle/Updaters.hpp"
@@ -60,12 +62,13 @@ DustSphere::AttractorUpdater* attractorUpdater;
 TimeCurve* spawnCurve;
 FireHandler* fire;
 SmokeHandler* smoke;
-vec3 dustSpherePos = {0,20, 0};
+vec3 dustSpherePos (0.0f, 20.0f, 0.0f);//= {};
 float anglePerSec = .6, posPerSec = 8;
 float terrainSize = 100;
 double lastTime = 0;
 #define NUM_TEXTURES 3
 GLuint textures[5];
+ParticleMaterial* materials[5];
 bool willDrawGrid = true;
 
 inline bool keyIsPressed(GLFWwindow* window, int keyCode) {
@@ -140,7 +143,7 @@ static void keyCallback(GLFWwindow* window, int key, int scancode, int action, i
 	if(keyIsPressed(window, GLFW_KEY_A)) {
 		mainCamera->move(0,-posDelta,0,0,0);
 	}
-	if(keyIsPressed(window, GLFW_KEY_0)) {
+/*	if(keyIsPressed(window, GLFW_KEY_0)) {
 		renderer->setTexture(textures[0]);
 	}
 	if(keyIsPressed(window, GLFW_KEY_1)) {
@@ -154,7 +157,7 @@ static void keyCallback(GLFWwindow* window, int key, int scancode, int action, i
 	}
 	if(keyIsPressed(window, GLFW_KEY_4)) {
 		renderer->setTexture(textures[4]);
-	}
+	}*/
 	if(keyIsPressed(window, GLFW_KEY_H)) {
 		init->setPosition(init->getPosition() + vec3(posDelta,0,0));
 	}
@@ -294,16 +297,28 @@ int main(void) {
 	glGenVertexArrays(1, &VertexArrayID);
 	glBindVertexArray(VertexArrayID);
 
+	renderer = new StandardParticleRenderer(mainCamera);
+
 	textures[0] = 0;
 	textures[1] = loadDDS("resources\\particle.DDS");
 	textures[2] = loadDDS("resources\\Gclef.dds");
 	textures[3] = loadDDS("resources\\Death.dds");
 
+	for (int i = 0; i < 4; i++) {
+		materials[i] = new ParticleMaterial(textures[i]);
+		renderer->setMaterial(materials[i], i);
+	}
+
 	StandardUpdater* updater = new StandardUpdater(mainCamera,glfwGetTime());
 	init = new StandardParticleInitializer(vec3(0,0,0), .6);
 	ParticlePool<Particle>* pool = new NaiveParticlePool<Particle>(maxParticles);
 	ParticleSystem<Particle>* particleSystem = new ParticleSystem<Particle>(pool,init,updater,spawnCurve,false);
-	renderer = new StandardParticleRenderer(particleSystem, mainCamera, textures[1]);
+
+
+	renderer->addParticleSystem(new RenderableParticleSystem(particleSystem, 3));
+	renderer->addParticleSystem(new RenderableParticleSystem((ParticleSystem<Particle>*)fireSystem, 1));
+	renderer->addParticleSystem(new RenderableParticleSystem((ParticleSystem<Particle>*)smokeSystem, 1));
+	renderer->addParticleSystem(new RenderableParticleSystem(particleSystem3, 1));
 
 
 	/*unsigned char minColor[4] = {100,100,100,100};
@@ -325,13 +340,13 @@ int main(void) {
 	ParticleSystem<Particle>* particleSystem2 = new ParticleSystem<Particle>(pool2,handler,handler,spawnCurve, false);
 	StandardParticleRenderer* renderer2 = new StandardParticleRenderer(particleSystem2, mainCamera, textures[0]);*/
 
-	StandardParticleRenderer* renderer3 = new StandardParticleRenderer(particleSystem3, mainCamera, textures[1]);
+	/*StandardParticleRenderer* renderer3 = new StandardParticleRenderer(particleSystem3, mainCamera, textures[1]);
 
 	StandardParticleRenderer* fireRenderer = new StandardParticleRenderer((ParticleSystem<Particle>*)fireSystem, mainCamera);
 	fireRenderer->setTexture(1);
 
 	StandardParticleRenderer* smokeRenderer = new StandardParticleRenderer((ParticleSystem<Particle>*)smokeSystem, mainCamera);
-	smokeRenderer->setTexture(1);
+	smokeRenderer->setTexture(1);*/
 
 #ifdef MULTI_THREAD
 	ParticleEngine* particleEngine = new ParticleEngine();
@@ -395,12 +410,12 @@ int main(void) {
 
 		if(willDrawGrid) drawGrid();
 		renderer->render();
-		//renderer2->render();
+		/*//renderer2->render();
 		renderer3->render();
 		//renderer4->render();
 		//rocketHandler.render();
 		fireRenderer->render();
-		smokeRenderer->render();
+		smokeRenderer->render();*/
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
