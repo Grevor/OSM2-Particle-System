@@ -44,12 +44,12 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
         printf("Debug is: %d\n", DEBUG);
     }
     if (key == GLFW_KEY_A && action == GLFW_PRESS) {
-        VISCOSITY = VISCOSITY * shift * ctrl - 0.1f;
+        VISCOSITY = VISCOSITY * shift * ctrl - 0.01f;
         shift = ctrl = 1;
         printf("Updated VISCOSITY to: %lf\n", VISCOSITY);
     }
     if (key == GLFW_KEY_S && action == GLFW_PRESS) {
-        VISCOSITY = VISCOSITY * shift * ctrl + 0.1f;
+        VISCOSITY = VISCOSITY * shift * ctrl + 0.01f;
         shift = ctrl = 1;
         printf("Updated VISCOSITY to: %lf\n", VISCOSITY);
     }
