@@ -36,6 +36,19 @@ int main(void) {
     SPEED_OF_SOUND = INIT_SPEED_OF_SOUND;
     MAX_DENSITY = INIT_MAX_DENSITY;
 
+    printf("Hi!\n");
+    printf("Keyboard shortcuts:\n");
+    printf("Use ARROW UP to start spawning particles and DOWN ARROW to stop\n");
+    printf("Press \"r\" to start killing particles, and \"r\" again to stop\n");
+    printf("\"y\" to decrease the variable SPEED OF SOUND, and \"u\" to increase\n");
+    printf("\"h\" to decrease the variable MAX_DENSITY, and \"j\" to increase\n");
+    printf("\"q\" to decrease the variable DAMPENING, and \"w\" to increase\n");
+    printf("\"a\" to decrease the variable VISCOSITY, and \"s\" to increase\n");
+    printf("If you press CTRL before a button, you divide the change by 10\n");
+    printf("If you press Shift before a button, you multiply the change by 10\n");
+    printf("Example: If viscosity is 0.2, and you press Shift, then a, it becomes 2.1 (2 + 0.1), rather than 0.3 (0.2 + 0.1).\n");
+    
+
     // ConstantCurve for the static particles
     Cellist *c = new Cellist(SYSTEM_WIDTH, SYSTEM_HEIGHT, CELL_SIZE);
 
