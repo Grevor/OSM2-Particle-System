@@ -3,19 +3,21 @@
  *
  *  Created on: 27 apr 2014
  *      Author: Erik
+ *
+ *  Do note that this will only work under cygwin.
  */
 
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
-#include "ConstantCurve.h"
-#include "SimpleParticleInitializer.h"
-#include "SimpleParticleUpdater.h"
-#include "SimpleParticle.h"
-#include "ParticleSystem.h"
-#include "NaiveParticlePool.h"
-#include "ParticleSystem_Test.h"
+#include "../src/ConstantCurve.h"
+#include "../src/SimpleParticleInitializer.h"
+#include "../src/SimpleParticleUpdater.h"
+#include "../src/SimpleParticle.h"
+#include "../src/ParticleSystem.h"
+#include "../src/NaiveParticlePool.h"
+#include "ParticleSystem_test.cpp"
 
 using namespace Curves;
 

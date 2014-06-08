@@ -3,14 +3,20 @@
  *
  *  Created on: 29 apr 2014
  *      Author: Erik
+ *  [THIS IS NOT AN AUTOMATIC TEST]
+ *  The following file contains no cool framework or otherwise. It simply contains methods for testing ParticlePools.
+ *  The general promise of these functions is that if they do not generate a SIGINT through assert(), they pass.
+ *  Please note the comments of the corresponding test-functions when using them.
+ *
+ *  These tests work only under cygwin.
  */
 
 #ifndef PARTICLEPOOL_TEST_H_
 #define PARTICLEPOOL_TEST_H_
 
-#include "DebugHelp.h"
-#include "ParticlePool.h"
-#include "ParticleIterator.h"
+#include "../src/DebugHelp.h"
+#include "../src/ParticlePool.h"
+#include "../src/ParticleIterator.h"
 #include <stdlib.h>
 
 namespace Test {

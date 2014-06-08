@@ -3,6 +3,8 @@
  *
  *  Created on: 7 maj 2014
  *      Author: Erik
+ *  Helper-class for the now scrapped demo-application.
+ *  Nothing to see here, move along.
  */
 
 #ifndef STRINGBITMAP_HPP_

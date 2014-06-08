@@ -9,8 +9,9 @@ OBJ_FOLDER=obj
 SRC_FOLDER=src
 MKDIR_COMMAND= mkdir -p
 
-demo: depend $(OBJ)
-	$(COMPILER) $(FLAGS) $(SRC_FOLDER)/demo.cpp -o "demo.exe" 
+#This command will only work under cygwin or (possibly)UNIX.
+testParticleSystem: depend $(OBJ)
+	$(COMPILER) $(FLAGS) test/test.cpp -o "test.exe" 
 	
 particleEngine:
 	$(MKDIR_COMMAND) $(OBJ_FOLDER)
