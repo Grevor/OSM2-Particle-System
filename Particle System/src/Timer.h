@@ -1,18 +1,14 @@
-/*
- * Timer.h
- *
- *  Created on: 5 maj 2014
- *      Author: Erik
- */
-
 #ifndef TIMER_H_
 #define TIMER_H_
 
+/**
+ * A Timer keeps track of the time relative to some point in time.
+ */
 template<typename T>
 class Timer {
 public:
 	/**
-	 * Gets the current time accordin to this timer.
+	 * Gets the current time according to this timer.
 	 * @return
 	 * The time.
 	 */
@@ -20,7 +16,5 @@ public:
 
 	virtual ~Timer() {}
 };
-
-
 
 #endif /* TIMER_H_ */
