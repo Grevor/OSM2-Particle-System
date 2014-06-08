@@ -1,15 +1,8 @@
-/*
- * Stepable.h
- *
- *  Created on: 28 apr 2014
- *      Author: David
- */
-
 #ifndef STEPABLE_H_
 #define STEPABLE_H_
 
 /**
- * A Stepable object is something which is updated in several iterations, called steps.
+ * A Stepable object is something which steps through several iterations.
  */
 class Stepable {
 public:
