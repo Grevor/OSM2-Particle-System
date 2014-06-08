@@ -1,8 +1,7 @@
 /*
- * ParticlePool_Test.h
+ * ParticlePool_test.h
  *
  *  Created on: 29 apr 2014
- *      Author: Erik
  *  [THIS IS NOT AN AUTOMATIC TEST]
  *  The following file contains no cool framework or otherwise. It simply contains methods for testing ParticlePools.
  *  The general promise of these functions is that if they do not generate a SIGINT through assert(), they pass.
