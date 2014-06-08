@@ -1,13 +1,9 @@
-/*
- * Reaper.h
- *
- *  Created on: 1 maj 2014
- *      Author: Erik
- */
-
 #ifndef REAPER_H_
 #define REAPER_H_
 
+/**
+ * A Reaper determines if particles are dead or not.
+ */
 template<typename T>
 class Reaper {
 public:
@@ -16,14 +12,11 @@ public:
 	/**
 	 * Checks if a certain particle is dead.
 	 * @param The particle.
-	 * @return
-	 * True if it is, else false.
+	 * @return true if it is dead, else false.
 	 */
 	virtual bool isDead(T*) = 0;
 
 	virtual ~Reaper() {}
 };
-
-
 
 #endif /* REAPER_H_ */
