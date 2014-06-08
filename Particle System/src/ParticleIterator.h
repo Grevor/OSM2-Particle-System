@@ -1,17 +1,9 @@
-/*
- * ParticleIterator.h
- * A ParticleIterator iterates over some collection of particles (arbitrary data).
- * This interface does not guarantee thread safety, but specific implementation may do.
- *  Created on: 16 apr 2014
- *      Author: David
- */
-
 #ifndef PARTICLEITERATOR_H_
 #define PARTICLEITERATOR_H_
 
 /**
- * Interface to an iterator which iterates over
- * pointers to allocated particles of a specified type.
+ * A ParticleIterator iterates over pointers to particles (an arbitrary type) in some collection of particles.
+ * This interface does not guarantee thread safety, but specific implementation may do.
  */
 template<typename T>
 class ParticleIterator {
