@@ -21,8 +21,14 @@ using namespace std;
 
 using boost::interprocess::interprocess_mutex;
 
+/**
+ * Class representing a particle pool with concurrent access.
+ */
 template<typename Particle>
 class NaiveParticlePool: public ParticlePool<Particle> {
+	/**
+	 * Struct used by the inner stacks.
+	 */
 	struct particleNode_t {
 		struct particleNode_t* next;
 		Particle p;
@@ -42,6 +48,10 @@ class NaiveParticlePool: public ParticlePool<Particle> {
 	interprocess_mutex* livingIteratorCreationMutex;
 
 public:
+	/**
+	 * Creates a new NaiveParticlePool of the specified size.
+	 * @param poolSize The size of the pool.
+	 */
 	NaiveParticlePool(int poolSize) {
 		pool = (Node)calloc(poolSize, sizeof(struct particleNode_t));
 		assert(pool != NULL);
@@ -50,8 +60,6 @@ public:
 		updated = NULL;
 		done = NULL;
 		living = NULL;
-		iteratorCreationHalted = false;
-		//livingIteratorCreationMutex(); //Initialize mutex.
 		numLivingIterator = 0;
 		for(int i = 0; i < poolSize; i++){
 			Node n = pool + i;
@@ -66,6 +74,9 @@ public:
 	}
 
 
+	/**
+	 * Class
+	 */
 	class StackIterator : public ParticleIterator<Particle> {
 	protected:
 		volatile atomic<Node>* stack;
@@ -116,8 +127,7 @@ public:
 		 * Class representing a living-particle-iterator. This iterator is slightly different from its peers
 		 * in that it checks not only its own stack, but also if the update-stack is empty.
 		 *
-		 * Do note that this iterator may, in some cases, miss particles which are initialized the same frame as the
-		 * iterator itself.
+		 * Do note that this iterator may, in some cases, miss particles which are updated last in the previous iteration.
 		 */
 		class LivingIterator : public StackIterator {
 
@@ -128,6 +138,13 @@ public:
 			//This will require a remake of all Node pointers to pool-indicies.
 			volatile atomic<int64_t> currentNodeAndOldTop;
 		public:
+			/**
+			 * Creates a new LivingIterator.
+			 * @param stack The stack from which to get living elements.
+			 * @param donePool The stack to put elements when they are done. [UNUSED]
+			 * @param updatePool The stack which contains elements which may be of interest to the iterator.
+			 * @param pool The NaiveParticlePool which this iterator belongs to.
+			 */
 			LivingIterator(volatile atomic<Node>* stack, volatile atomic<Node>* donePool, volatile atomic<Node>* updatePool, NaiveParticlePool* pool) :
 				StackIterator(stack, donePool) {
 				this->updatePool = updatePool;
@@ -138,13 +155,20 @@ public:
 				this->pool->affectNumLivingIterators(1);
 			}
 
+			/**
+			 * Note that this function may miss up to n - 1 particles,
+			 * where n is the number of threads accessing the iterator.
+			 *
+			 * This function may therefore yield both false negatives and false positives.
+			 * @return True if this iterator has a next particle, else false.
+			 */
 			bool hasNext() override {
 				return *updatePool != NULL || (currentNode != oldTop || topNode != *this->stack); //*StackIterator::stack != NULL;
 			}
 
 			Particle* next() override {
 				while(true) {
-					Particle* part = livingNext();//StackIterator::next();
+					Particle* part = livingNext();
 					if(part == NULL) {
 						if(!hasNext())
 							return NULL;
@@ -155,6 +179,12 @@ public:
 				return NULL;
 			}
 
+			/**
+			 * [NOT THREAD-SAFE]
+			 * Gets the next particle from this iterator.
+			 * @return Pointer to the next particle. This Particle will not be given by this iterator again.
+			 * If no particle could be found, return NULL.
+			 */
 			Particle* livingNext() {
 				if(currentNode != oldTop) {
 					Particle* p = &((Node)currentNode)->p;
@@ -204,6 +234,10 @@ public:
 				return NULL;
 			}
 
+			/**
+			 * Empty since we do not want anything to happen.
+			 * @param p
+			 */
 			void done(Particle* p) override {
 
 			}
@@ -211,20 +245,20 @@ public:
 			~LivingIterator() override {
 				pool->affectNumLivingIterators(-1);
 			}
-		};
+		};//!LivingIterator
 
 		friend StackIterator;
 		friend LivingIterator;
 
-	ParticleIterator<Particle>* getAllocationIterator() {
+	ParticleIterator<Particle>* getAllocationIterator() override {
 		return new StackIterator(&this->freelist, &this->updated);
 	}
 
-	ParticleIterator<Particle>* getUpdateIterator() {
+	ParticleIterator<Particle>* getUpdateIterator() override {
 		return new StackIterator(&this->living, &this->updated);
 	}
 
-	ParticleIterator<Particle>* getLivingIterator() {
+	ParticleIterator<Particle>* getLivingIterator() override {
 		livingIteratorCreationMutex->lock();
 		ParticleIterator<Particle>* iter = new LivingIterator(&this->updated, NULL, &this->living, this);
 		livingIteratorCreationMutex->unlock();
@@ -240,7 +274,11 @@ public:
 		}
 	}
 
-	virtual void reset() {
+	/**
+	 * [NOTE]
+	 * This function is currently done in a naive and bad way.
+	 */
+	virtual void reset() override {
 		stepComplete();
 		ParticleIterator<Particle>* iter = getUpdateIterator();
 		while(iter->hasNext()) {
@@ -276,20 +314,17 @@ public:
 		return pSize;
 	}
 private:
-	bool iteratorCreationHalted;
-
-	void haltIteratorCreation() {
-		iteratorCreationHalted = true;
-	}
-
-	void resumeIteratorCreation() {
-		iteratorCreationHalted = false;
-	}
 
 	void waitForLivingIterators() {
 		while(numLivingIterator != 0) ;
 	}
 
+	/**
+	 * [UNUSED]
+	 * Pushes a stack of nodes onto another stack of nodes.
+	 * @param dst The stack to push to.
+	 * @param src The stack to pop from.
+	 */
 	void append(volatile atomic<Node>* dst, volatile atomic<Node>* src) {
 		while(true) {
 			Node expected = *src;
@@ -305,7 +340,12 @@ private:
 		}
 	}
 
-
+	/**
+	 * Gets the pointer to the stack node of a particle-pointer.
+	 * @param pa The pointer to the particle for which to get the stack node pointer to.
+	 * @return
+	 * Pointer to the stack node.
+	 */
 	static Node getParticleNodePtr(Particle* pa) {
 #ifndef DEBUG
 		return (Node)PTR_SUB(pa,offsetof(particleNode_t,p));
@@ -331,10 +371,6 @@ private:
 			if(std::atomic_compare_exchange_strong(&this->numLivingIterator, &expected, desired)) return;
 		}
 	}
-
-
-
-
 };
 
 #endif /* NAIVEPARTICLEPOOL_H_ */

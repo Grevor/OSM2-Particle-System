@@ -12,9 +12,9 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include "../src/ConstantCurve.h"
-#include "../src/SimpleParticleInitializer.h"
-#include "../src/SimpleParticleUpdater.h"
-#include "../src/SimpleParticle.h"
+#include "SimpleParticleInitializer.h"
+#include "SimpleParticleUpdater.h"
+#include "SimpleParticle.h"
 #include "../src/ParticleSystem.h"
 #include "../src/NaiveParticlePool.h"
 #include "ParticleSystem_test.cpp"

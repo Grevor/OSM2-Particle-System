@@ -11,7 +11,7 @@
 #include <list>
 #include <iterator>
 
-#include "ParticleInitializer.h"
+#include "../ParticleInitializer.h"
 #include "ListFunctions.h"
 
 

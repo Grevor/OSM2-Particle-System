@@ -13,7 +13,7 @@
 #ifndef PARTICLEPOOL_TEST_H_
 #define PARTICLEPOOL_TEST_H_
 
-#include "../src/DebugHelp.h"
+#include "DebugHelp.h"
 #include "../src/ParticlePool.h"
 #include "../src/ParticleIterator.h"
 #include <stdlib.h>

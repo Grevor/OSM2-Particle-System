@@ -18,7 +18,7 @@
 #include "../src/ParticleIterator.h"
 #include "../src/ParticleSystem.h"
 #include "../src/ParticlePool.h"
-#include "../src/DebugHelp.h"
+#include "DebugHelp.h"
 #include "../src/Curve.h"
 #include "../src/ParticleUpdater.h"
 
