@@ -12,7 +12,6 @@
 #include <atomic>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/condition_variable.hpp>
-#include <boost/interprocess/sync/interprocess_semaphore.hpp>
 #include <boost/bind.hpp>
 
 #include "IterationUpdateable.h"
@@ -25,7 +24,6 @@ class ParticleEngine: public Stepable {
 	boost::mutex mutex; //monitor mutex
 	boost::condition_variable newTasksCV;
 	boost::condition_variable taskCompletionCV;
-	//boost::interprocess::interprocess_semaphore taskSemaphore;
 	std::atomic<int> nThreads;
 	std::atomic<int> nUninititializedTasks;
 	bool isRunning;
@@ -34,13 +32,11 @@ public:
 	ParticleEngine() : ParticleEngine(boost::thread::hardware_concurrency()) {}
 
 	ParticleEngine(int numThreads)
-		//taskSemaphore(0)
 	{
 		if (numThreads < 1)
 			throw std::invalid_argument("Too few threads: " + numThreads);
 		this->isRunning = true;
 		this->nThreads = numThreads;
-		//this->nWorkingThreads = numThreads;
 		this->nUninititializedTasks = 0;
 		for (int threadId = 0; threadId < numThreads; ++threadId) {
 			threads.create_thread(boost::bind(&ParticleEngine::performTasks, this));
@@ -57,17 +53,6 @@ public:
 		newTaskIter = particleSystems.begin();
 		nUninititializedTasks = particleSystems.size();
 		newTasksCV.notify_all();
-		/*taskMutex.lock();
-		typename std::list<IterationUpdateable*>::iterator iter = particleSystems.begin();
-		newTaskIter = std::list<IterationUpdateable*>::iterator(iter);
-		int newTaskCount = 0;
-		while (iter != particleSystems.end()) {
-			(*iter)->step();
-			iter++;
-			newTaskCount++;
-			taskSemaphore.post();
-		}
-		nTasks += newTaskCount;*/
 	}
 
 	bool isStepComplete() override {
@@ -77,8 +62,6 @@ public:
 	 * Blocking call which returns when the step is complete.
 	 */
 	void waitStepComplete() {
-		//TODO: naive implementation, busy wait. improve this
-		//while (!isStepComplete()) {}
 		boost::mutex::scoped_lock lock(mutex);
 		if (isStepComplete())
 			return;
@@ -162,24 +145,6 @@ private:
 				}
 			}
 			lock.lock(); //lock for next loop iteration
-
-			/*taskSemaphore.wait();
-			if (!isRunning) {
-				break;
-			}
-
-			++nWorkingThreads;
-
-			taskMutex.lock();
-			IterationUpdateable* task = *newTaskIter;
-			newTaskIter++;
-			taskMutex.unlock();
-
-			task->update();
-
-			--nWorkingThreads;
-
-			--nTasks;*/
 		}
 		--nThreads;
 	}
@@ -193,10 +158,6 @@ private:
 		this->isRunning = false;
 		newTasksCV.notify_all();
 		lock.unlock();
-		/*int nWaitingThreads = nThreads - nWorkingThreads;
-		for (int i = 0; i < nWaitingThreads; ++i) {
-			taskSemaphore.post();
-		}*/
 		threads.join_all();
 	}
 };
