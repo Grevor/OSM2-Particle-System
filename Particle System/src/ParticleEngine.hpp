@@ -16,6 +16,9 @@
 
 #include "IterationUpdateable.h"
 
+/**
+ * A ParticleEngine supplies threads to concurrently update multiple particle systems.
+ */
 class ParticleEngine: public Stepable {
 	boost::thread_group threads;
 	std::list<IterationUpdateable*> particleSystems;
@@ -31,6 +34,11 @@ class ParticleEngine: public Stepable {
 public:
 	ParticleEngine() : ParticleEngine(boost::thread::hardware_concurrency()) {}
 
+	/**
+	 * Constructor
+	 * @param numThreads is the number of threads which this ParticleEngine uses
+	 * to update the particle systems.
+	 */
 	ParticleEngine(int numThreads)
 	{
 		if (numThreads < 1)

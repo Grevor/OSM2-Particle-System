@@ -11,10 +11,10 @@ public:
 
 	/**
 	 * Checks if a certain particle is dead.
-	 * @param The particle.
+	 * @param particle The particle.
 	 * @return true if it is dead, else false.
 	 */
-	virtual bool isDead(T*) = 0;
+	virtual bool isDead(T* particle) = 0;
 
 	virtual ~Reaper() {}
 };
