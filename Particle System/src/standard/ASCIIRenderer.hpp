@@ -2,14 +2,13 @@
  * ASCIIRenderer.hpp
  *
  *  Created on: 7 maj 2014
- *      Author: Erik
  */
 
 #ifndef ASCIIRENDERER_HPP_
 #define ASCIIRENDERER_HPP_
 
 #include "../../test/StringBitmap.hpp"
-#include "../core/ParticleRenderer.h"
+#include "../utilities/ParticleRenderer.h"
 
 class ASCIIRenderer : public ParticleRenderer<StandardParticle> {
 	StringBitmap* bmp;

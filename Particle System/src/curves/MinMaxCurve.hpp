@@ -2,7 +2,6 @@
  * MinMaxCurve.h
  *
  *  Created on: 25 apr 2014
- *      Author: Elin
  */
 
 #ifndef MINMAXCURVE_H_
@@ -12,7 +11,7 @@
 #include <ctime>
 #include <iostream>
 
-namespace Curve {
+namespace Curves {
 class MinMaxCurve : Curve<long, long>{
 private:
 	Curve<long,long> *Curve1;

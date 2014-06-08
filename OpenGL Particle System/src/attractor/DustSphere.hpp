@@ -2,13 +2,12 @@
  * DustSphere.hpp
  *
  *  Created on: 19 maj 2014
- *      Author: Erik
  */
 
 #ifndef DUSTSPHERE_HPP_
 #define DUSTSPHERE_HPP_
 
-#include "Curve.h"
+#include "curves/Curve.h"
 #include "ParticleInitializer.h"
 #include "ParticleUpdater.h"
 #include "../particle/Initializers.hpp"

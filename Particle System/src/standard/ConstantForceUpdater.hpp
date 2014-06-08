@@ -2,7 +2,6 @@
  * ConstantForceUpdater.hpp
  *
  *  Created on: 5 maj 2014
- *      Author: Erik
  */
 
 #ifndef CONSTANTFORCEUPDATER_HPP_

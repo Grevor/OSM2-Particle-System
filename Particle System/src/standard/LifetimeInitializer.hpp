@@ -2,7 +2,6 @@
  * LifetimeInitializer.hpp
  *
  *  Created on: 7 maj 2014
- *      Author: Erik
  */
 
 #ifndef LIFETIMEINITIALIZER_HPP_

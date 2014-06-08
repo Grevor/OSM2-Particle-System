@@ -2,13 +2,12 @@
  * TimeCurve.hpp
  *
  *  Created on: 12 maj 2014
- *      Author: Erik
  */
 
 #ifndef TIMECURVE_HPP_
 #define TIMECURVE_HPP_
 
-#include <Curve.h>
+#include <curves/Curve.h>
 #include <GLFW/glfw3.h>
 
 class TimeCurve : public Curve<long,long> {

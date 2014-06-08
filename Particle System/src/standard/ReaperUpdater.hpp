@@ -2,13 +2,12 @@
  * ReaperUpdater.hpp
  *
  *  Created on: 7 maj 2014
- *      Author: Erik
  */
 
 #ifndef REAPERUPDATER_HPP_
 #define REAPERUPDATER_HPP_
 
-#include "../Reaper.h"
+#include "../utilities/Reaper.h"
 #include "../ParticleUpdater.h"
 #include "StandardParticle.hpp"
 

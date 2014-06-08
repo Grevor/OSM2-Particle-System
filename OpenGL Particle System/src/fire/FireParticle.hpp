@@ -2,7 +2,6 @@
  * FireParticle.hpp
  *
  *  Created on: 28 maj 2014
- *      Author: Erik
  */
 
 #ifndef FIREPARTICLE_HPP_

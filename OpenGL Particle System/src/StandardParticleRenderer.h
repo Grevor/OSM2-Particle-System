@@ -2,7 +2,6 @@
  * StandardParticleRenderer.h
  *
  *  Created on: 12 maj 2014
- *      Author: David
  */
 
 #ifndef STANDARDPARTICLERENDERER_H_
@@ -13,7 +12,7 @@
 #include <GL/gl.h>
 #include "Camera.hpp"
 #include "Particle.hpp"
-#include "ParticleSystem.h"
+#include "ParticleSystem.hpp"
 #include "texture.hpp"
 #include "RenderableParticleSystem.hpp"
 

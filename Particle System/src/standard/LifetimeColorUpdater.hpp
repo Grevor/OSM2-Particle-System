@@ -2,7 +2,6 @@
  * LifetimeColorUpdater.hpp
  *
  *  Created on: 6 maj 2014
- *      Author: Erik
  */
 
 #ifndef LIFETIMECOLORUPDATER_HPP_

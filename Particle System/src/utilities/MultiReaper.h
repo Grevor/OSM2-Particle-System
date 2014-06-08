@@ -10,7 +10,7 @@
 
 #include <list>
 #include <iterator>
-#include "../Reaper.h"
+#include "Reaper.h"
 #include "ListFunctions.h"
 
 namespace Particle {

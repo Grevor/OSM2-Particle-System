@@ -2,7 +2,6 @@
  * RandomLifetimeInitializer.hpp
  *
  *  Created on: 5 maj 2014
- *      Author: Erik
  */
 
 #ifndef RANDOMLIFETIMEINITIALIZER_HPP_

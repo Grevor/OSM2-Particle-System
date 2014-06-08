@@ -2,7 +2,6 @@
  * AlphaFadeUpdater.hpp
  *
  *  Created on: 5 maj 2014
- *      Author: Erik
  */
 
 #ifndef ALPHAFADER_HPP_

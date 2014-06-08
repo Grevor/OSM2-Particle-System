@@ -2,7 +2,6 @@
  * Camera.cpp
  *
  *  Created on: 8 maj 2014
- *      Author: David
  */
 
 

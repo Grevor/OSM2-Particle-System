@@ -2,7 +2,6 @@
  * Camera.hpp
  *
  *  Created on: 8 maj 2014
- *      Author: David
  */
 
 #ifndef CAMERA_HPP_

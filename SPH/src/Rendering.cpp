@@ -2,7 +2,7 @@
 #include "GLFW/glfw3.h"
 #include <GL/glut.h>
 #include <GL/gl.h>
-#include "../../Particle System/src/ParticleSystem.h"
+#include "../../Particle System/src/ParticleSystem.hpp"
 #include "WaterParticleStruct.h"
 #include "WaterParticle.h"
 #include <boost/foreach.hpp>

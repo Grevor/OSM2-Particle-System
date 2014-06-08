@@ -16,10 +16,10 @@
 #include <stdlib.h>
 #include <atomic>
 #include "../src/ParticleIterator.h"
-#include "../src/ParticleSystem.h"
+#include "../src/ParticleSystem.hpp"
 #include "../src/ParticlePool.h"
 #include "DebugHelp.h"
-#include "../src/Curve.h"
+#include "../src/curves/Curve.h"
 #include "../src/ParticleUpdater.h"
 
 using namespace Curves;

@@ -2,7 +2,6 @@
  * OscillationCurve.h
  *
  *  Created on: 1 maj 2014
- *      Author: Erik
  */
 
 #ifndef OSCILLATIONCURVE_H_

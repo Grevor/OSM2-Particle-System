@@ -2,14 +2,13 @@
  * LifetimeUpdater.hpp
  *
  *  Created on: 5 maj 2014
- *      Author: Erik
  */
 
 #ifndef LIFETIMEUPDATER_HPP_
 #define LIFETIMEUPDATER_HPP_
 #include "../ParticleUpdater.h"
 #include "../ParticleInitializer.h"
-#include "../Timer.h"
+#include "../utilities/Timer.h"
 
 class LifetimeUpdater : public ParticleUpdater<StandardParticle>, public ParticleInitializer<StandardParticle> {
 	Timer<float>* timer;

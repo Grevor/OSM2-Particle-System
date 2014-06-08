@@ -2,7 +2,6 @@
  * main.cpp
  *
  *  Created on: 2 maj 2014
- *      Author: Erik
  */
 
 #include "StandardParticle.hpp"
@@ -10,31 +9,28 @@
 #include <Eigen/Eigen>
 //#include "StandardTimer.hpp"
 #include "../../test/StringBitmap.hpp"
-#include "../MultiInitializer.h"
-#include "../MultiUpdater.h"
-#include "../MultiReaper.h"
-#include "../Curve.h"
-#include "../ConstantCurve.h"
-#include "../ParticleSystem.h"
-#include "../NaiveParticlePool.h"
+#include "../utilities/MultiInitializer.h"
+#include "../utilities/MultiUpdater.h"
+#include "../utilities/MultiReaper.h"
+#include "../curves/Curve.h"
+#include "../curves/ConstantCurve.hpp"
+#include "../ParticleSystem.hpp"
+#include "../NaiveParticlePool.hpp"
 #include "ASCIIRenderer.hpp"
 #include "EmitterInitializer.hpp"
 #include "EmitterWithinSphere.hpp"
 #include "ConstantForceUpdater.hpp"
 #include "OffsetInitializer.hpp"
 #include "PhysicsUpdater.hpp"
-//#include "../ParticleEngine.h"
 #include "OriginDistanceColorUpdater.hpp"
 #include "FixedTimer.hpp"
 #include "LifetimeUpdater.hpp"
 #include "LifetimeInitializer.hpp"
 #include "ReaperUpdater.hpp"
 #include "LifetimeReaper.hpp"
-#include "../core/ZeroInitializer.hpp"
+#include "../utilities/ZeroInitializer.hpp"
 #include "LifetimeColorUpdater.hpp"
 #include "ExplosionVelocityInitializer.hpp"
-//#include "RandomAlphaInitializer.hpp"
-//#include "AlphaFadeUpdater.hpp"
 
 using namespace Particle;
 using namespace Curves;
@@ -81,7 +77,7 @@ int main(int argc, char **argv) {
 
 //	initializer->addInitializer(new RandomAlphaInitializer(1,122));
 	initializer->addInitializer(new OffsetInitializer(&offset));
-	initializer->addInitializer(new ExplosionVelocityInitializer(&origin, 1.5));
+	initializer->addInitializer(new ExplosionVelocityInitializer(origin, 1.5));
 	initializer->addInitializer(new EmitterInitializer(new EmitterWithinSphere(zero, 1)));
 	initializer->addInitializer(new FooColorInit(initColor));
 	initializer->addInitializer(new LifetimeUpdater(timer));

@@ -1,7 +1,7 @@
 #ifndef CONCURVE_HPP_
 #define CONCURVE_HPP_
 
-#include "../../Particle System/src/Curve.h"
+#include "../../Particle System/src/curves/Curve.h"
 
 class IncCurve : public Curves::Curve<long,long> {
 	long value;

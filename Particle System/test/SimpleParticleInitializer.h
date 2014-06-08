@@ -2,7 +2,6 @@
  * SimpleParticleInitializer.h
  *
  *  Created on: 28 apr 2014
- *      Author: Erik
  */
 
 #ifndef SIMPLEPARTICLEINITIALIZER_H_

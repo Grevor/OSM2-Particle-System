@@ -2,13 +2,12 @@
  * EmitterWithinSphere.hpp
  *
  *  Created on: 7 maj 2014
- *      Author: Erik
  */
 
 #ifndef EMITTERWITHINSPHERE_HPP_
 #define EMITTERWITHINSPHERE_HPP_
 
-#include "../core/Emitter.h"
+#include "../utilities/Emitter.h"
 #include <Eigen/Eigen>
 #include "StandardParticle.hpp"
 #include <boost/random.hpp>

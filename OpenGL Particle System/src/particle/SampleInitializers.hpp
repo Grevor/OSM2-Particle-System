@@ -2,7 +2,6 @@
  * SampleInitializers.hpp
  *
  *  Created on: 16 maj 2014
- *      Author: Erik
  */
 
 #ifndef SAMPLEINITIALIZERS_HPP_

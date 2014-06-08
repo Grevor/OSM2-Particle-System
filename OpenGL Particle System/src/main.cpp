@@ -28,7 +28,7 @@
 #include "TimeCurve.hpp"
 #include "Updater.hpp"
 #include "Initializer.hpp"
-#include "NaiveParticlePool.h"
+#include "NaiveParticlePool.hpp"
 #include "texture.hpp"
 #include "ParticleMaterial.hpp"
 #include "RenderableParticleSystem.hpp"
@@ -36,18 +36,16 @@
 #include "particle/SampleInitializers.hpp"
 #include "particle/Updaters.hpp"
 #include "attractor/DustSphere.hpp"
-//#include "fireworks/Fireworks.h"
 #include "fire/FireHandler.hpp"
 #include "fire/FireParticle.hpp"
 #include "smoke/SmokeHandler.hpp"
-#include <ConstantCurve.h>
+#include <curves/ConstantCurve.hpp>
 #ifdef MULTI_THREAD
 #include "ParticleEngine.hpp"
 #endif
 
 using namespace glm;
 using namespace std;
-//using namespace Fireworks;
 
 #define MAX_FPS 60
 #define SPAWN_INCREASE 3000 //1000 for demo.
@@ -143,21 +141,6 @@ static void keyCallback(GLFWwindow* window, int key, int scancode, int action, i
 	if(keyIsPressed(window, GLFW_KEY_A)) {
 		mainCamera->move(0,-posDelta,0,0,0);
 	}
-/*	if(keyIsPressed(window, GLFW_KEY_0)) {
-		renderer->setTexture(textures[0]);
-	}
-	if(keyIsPressed(window, GLFW_KEY_1)) {
-		renderer->setTexture(textures[1]);
-	}
-	if(keyIsPressed(window, GLFW_KEY_2)) {
-		renderer->setTexture(textures[2]);
-	}
-	if(keyIsPressed(window, GLFW_KEY_3)) {
-		renderer->setTexture(textures[3]);
-	}
-	if(keyIsPressed(window, GLFW_KEY_4)) {
-		renderer->setTexture(textures[4]);
-	}*/
 	if(keyIsPressed(window, GLFW_KEY_H)) {
 		init->setPosition(init->getPosition() + vec3(posDelta,0,0));
 	}
@@ -186,7 +169,6 @@ static void keyCallback(GLFWwindow* window, int key, int scancode, int action, i
 	}
 
 	if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT)) {
-		//attractorUpdater->setAttractorPos(attractorUpdater->getAttractorPos() + getDeltaVector());
 		attractorUpdater->setAttractorPower(10);
 
 		float normX,normY;
@@ -314,39 +296,10 @@ int main(void) {
 	ParticlePool<Particle>* pool = new NaiveParticlePool<Particle>(maxParticles);
 	ParticleSystem<Particle>* particleSystem = new ParticleSystem<Particle>(pool,init,updater,spawnCurve,false);
 
-
 	renderer->addParticleSystem(new RenderableParticleSystem(particleSystem, 3));
 	renderer->addParticleSystem(new RenderableParticleSystem((ParticleSystem<Particle>*)fireSystem, 1));
 	renderer->addParticleSystem(new RenderableParticleSystem((ParticleSystem<Particle>*)smokeSystem, 1));
 	renderer->addParticleSystem(new RenderableParticleSystem(particleSystem3, 1));
-
-
-	/*unsigned char minColor[4] = {100,100,100,100};
-	unsigned char maxColor[4] = {255,255,255,255};
-
-	ParticleHandler<FountainInitializer, RandomColorInitializer, RandomSizeInitializer,
-	RandomLifetimeInitializer,NullInitializer,NullInitializer,ConstantForceUpdater, PhysicsUpdater, LifetimeUpdater>* handler =
-			new ParticleHandler<FountainInitializer, RandomColorInitializer, RandomSizeInitializer,
-			RandomLifetimeInitializer,NullInitializer,NullInitializer,ConstantForceUpdater, PhysicsUpdater, LifetimeUpdater>(glfwGetTime(),
-					FountainInitializer(vec3(0,0,0),vec3(0,10,0),0,.1,.3,5,10),
-					RandomColorInitializer(minColor, maxColor),
-					RandomSizeInitializer(.3,2),
-					RandomLifetimeInitializer(5,5),
-					ConstantForceUpdater(vec3(0,-1,0), false),
-					PhysicsUpdater(),
-					LifetimeUpdater());
-
-	NaiveParticlePool<Particle>* pool2 = new NaiveParticlePool<Particle>(maxParticles * 20);
-	ParticleSystem<Particle>* particleSystem2 = new ParticleSystem<Particle>(pool2,handler,handler,spawnCurve, false);
-	StandardParticleRenderer* renderer2 = new StandardParticleRenderer(particleSystem2, mainCamera, textures[0]);*/
-
-	/*StandardParticleRenderer* renderer3 = new StandardParticleRenderer(particleSystem3, mainCamera, textures[1]);
-
-	StandardParticleRenderer* fireRenderer = new StandardParticleRenderer((ParticleSystem<Particle>*)fireSystem, mainCamera);
-	fireRenderer->setTexture(1);
-
-	StandardParticleRenderer* smokeRenderer = new StandardParticleRenderer((ParticleSystem<Particle>*)smokeSystem, mainCamera);
-	smokeRenderer->setTexture(1);*/
 
 #ifdef MULTI_THREAD
 	ParticleEngine* particleEngine = new ParticleEngine();
@@ -356,22 +309,6 @@ int main(void) {
 	particleEngine->addParticleSystem(fireSystem);
 	particleEngine->addParticleSystem(smokeSystem);
 #endif
-/*
-	RocketHandler rocketHandler = RocketHandler(vec3(5,0,0),3,
-#ifndef MULTI_THREAD
-			NULL
-#else
-			particleEngine
-#endif
-			,mainCamera);
-	ParticleSystem<Rocket>* fireworksSystem = new ParticleSystem<Rocket>(1,&rocketHandler,&rocketHandler,new ConstantCurve(1));
-
-	StandardParticleRenderer* renderer4 = new StandardParticleRenderer((ParticleSystem<Particle>*)fireworksSystem,mainCamera);
-
-#ifdef MULTI_THREAD
-	particleEngine->addParticleSystem(fireworksSystem);
-#endif
-*/
 	double timePerFrame = 1.0/MAX_FPS;
 	double previousTime = glfwGetTime();
 	double newTime = 0;
@@ -387,10 +324,8 @@ int main(void) {
 		}
 #endif
 		updater->setTime(newTime);
-		//handler->updateDelta(newTime);
 		spawnCurve->update(deltaTime);
 		attractorUpdater->setDeltaTime(deltaTime);
-		//rocketHandler.setDelta((float)deltaTime);
 		fireHandler.setDeltaTime(deltaTime);
 		smokeHandler.setDelta(deltaTime);
 
@@ -410,12 +345,6 @@ int main(void) {
 
 		if(willDrawGrid) drawGrid();
 		renderer->render();
-		/*//renderer2->render();
-		renderer3->render();
-		//renderer4->render();
-		//rocketHandler.render();
-		fireRenderer->render();
-		smokeRenderer->render();*/
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

@@ -2,7 +2,6 @@
  * OriginDistanceColorUpdater.hpp
  *
  *  Created on: 6 maj 2014
- *      Author: Erik
  */
 
 #ifndef ORIGINDISTANCECOLORUPDATER_HPP_

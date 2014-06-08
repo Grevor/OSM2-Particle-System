@@ -2,15 +2,14 @@
  * MaxRadiusReaper.hpp
  *
  *  Created on: 5 maj 2014
- *      Author: Erik
  */
 
 #ifndef MAXRADIUSREAPER_HPP_
 #define MAXRADIUSREAPER_HPP_
-#include "../Reaper.h"
+#include "../utilities/Reaper.h"
 #include "StandardParticle.hpp"
 #include <Eigen/Eigen>
-#include "../ConstantCurve.h"
+#include "../curves/ConstantCurve.hpp"
 
 using namespace Curves;
 class MaxRadiusReaper : public Reaper<StandardParticle> {

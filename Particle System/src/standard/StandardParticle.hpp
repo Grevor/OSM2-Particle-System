@@ -2,14 +2,13 @@
  * FireParticle.h
  *
  *  Created on: 1 maj 2014
- *      Author: Erik
  */
 
 #ifndef FIREPARTICLE_H_
 #define FIREPARTICLE_H_
 
 #include <Eigen/Eigen>
-#include "../Curve.h"
+#include "../curves/Curve.h"
 #include <stdlib.h>
 
 using namespace Curves;

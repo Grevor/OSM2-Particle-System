@@ -2,12 +2,11 @@
  * FixedTimer.hpp
  *
  *  Created on: 7 maj 2014
- *      Author: Erik
  */
 
 #ifndef FIXEDTIMER_HPP_
 #define FIXEDTIMER_HPP_
-#include "../Timer.h"
+#include "../utilities/Timer.h"
 
 template<typename T>
 class FixedTimer : public Timer<T> {

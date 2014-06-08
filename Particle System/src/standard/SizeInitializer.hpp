@@ -2,7 +2,6 @@
  * SizeInitializer.hpp
  *
  *  Created on: 9 maj 2014
- *      Author: Erik
  */
 
 #ifndef SIZEINITIALIZER_HPP_

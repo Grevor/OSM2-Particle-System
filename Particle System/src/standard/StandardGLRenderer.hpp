@@ -2,14 +2,13 @@
  * StandardGLRenderer.hpp
  *
  *  Created on: 9 maj 2014
- *      Author: Erik
  */
 
 #ifndef STANDARDGLRENDERER_HPP_
 #define STANDARDGLRENDERER_HPP_
 #include <GL/gl.h>
 #include <GL/glu.h>
-#include "../core/ParticleRenderer.h"
+#include "../utilities/ParticleRenderer.h"
 #include "StandardParticle.hpp"
 
 class StandardGLRenderer : public ParticleRenderer<StandardParticle> {

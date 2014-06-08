@@ -2,7 +2,6 @@
  * ColorInitializer.h
  *
  *  Created on: 7 maj 2014
- *      Author: Elin
  */
 
 #ifndef COLORINITIALIZER_H_

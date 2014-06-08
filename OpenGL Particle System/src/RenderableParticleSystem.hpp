@@ -10,7 +10,7 @@
 
 #include <GL/gl.h>
 #include "Particle.hpp"
-#include "ParticleSystem.h"
+#include "ParticleSystem.hpp"
 #include "ParticleMaterial.hpp"
 
 class RenderableParticleSystem {

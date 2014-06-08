@@ -2,7 +2,6 @@
  * ParticleMaterial.hpp
  *
  *  Created on: 20 maj 2014
- *      Author: David
  */
 
 #ifndef PARTICLEMATERIAL_HPP_

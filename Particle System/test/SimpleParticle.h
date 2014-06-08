@@ -2,7 +2,6 @@
  * SimpleParticle.h
  *
  *  Created on: 28 apr 2014
- *      Author: Erik
  */
 
 #ifndef SIMPLEPARTICLE_H_

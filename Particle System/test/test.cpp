@@ -2,7 +2,6 @@
  * demo.cpp
  *
  *  Created on: 27 apr 2014
- *      Author: Erik
  *
  *  Do note that this will only work under cygwin.
  */
@@ -11,12 +10,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
-#include "../src/ConstantCurve.h"
+#include "../src/curves/ConstantCurve.hpp"
 #include "SimpleParticleInitializer.h"
 #include "SimpleParticleUpdater.h"
 #include "SimpleParticle.h"
-#include "../src/ParticleSystem.h"
-#include "../src/NaiveParticlePool.h"
+#include "../src/ParticleSystem.hpp"
+#include "../src/NaiveParticlePool.hpp"
 #include "ParticleSystem_test.cpp"
 
 using namespace Curves;

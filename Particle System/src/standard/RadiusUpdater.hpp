@@ -2,7 +2,6 @@
  * RadiusUpdater.hpp
  *
  *  Created on: 5 maj 2014
- *      Author: Erik
  */
 
 #ifndef RADIUSUPDATER_HPP_
@@ -10,8 +9,8 @@
 #include "../ParticleUpdater.h"
 #include "StandardParticle.hpp"
 #include <Eigen/Eigen>
-#include "../Curve.h"
-#include "../LinearCurve.hpp"
+#include "../curves/Curve.h"
+#include "../curves/LinearCurve.hpp"
 
 class RadiusUpdater : public ParticleUpdater<StandardParticle> {
 	Curve<float,float>* radiusCurve;

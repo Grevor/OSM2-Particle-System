@@ -2,7 +2,6 @@
  * OffsetInitializer.hpp
  *
  *  Created on: 5 maj 2014
- *      Author: Erik
  */
 
 #ifndef OFFSETINITIALIZER_HPP_

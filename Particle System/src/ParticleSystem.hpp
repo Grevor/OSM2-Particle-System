@@ -7,14 +7,14 @@
 #ifndef PARTICLESYSTEM_H_
 #define PARTICLESYSTEM_H_
 
-#include "Curve.h"
+#include "curves/Curve.h"
 #include "IterationUpdateable.h"
 #include "ParticleInitializer.h"
 #include "ParticleIterator.h"
 #include "ParticlePool.h"
 #include "ReadableParticlePool.h"
 #include "ParticleUpdater.h"
-#include "NaiveParticlePool.h"
+#include "NaiveParticlePool.hpp"
 #include <stdlib.h>
 #include <boost/atomic/atomic.hpp>
 #include <assert.h>

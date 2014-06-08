@@ -2,13 +2,12 @@
  * StandardTimer.hpp
  *
  *  Created on: 6 maj 2014
- *      Author: Erik
  */
 
 #ifndef STANDARDTIMER_HPP_
 #define STANDARDTIMER_HPP_
 
-#include "../Timer.h"
+#include "../utilities/Timer.h"
 #include <boost/chrono.hpp>
 #include <time.h>
 

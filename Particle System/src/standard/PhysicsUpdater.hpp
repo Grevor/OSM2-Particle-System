@@ -2,7 +2,6 @@
  * PhysicsUpdater.hpp
  *
  *  Created on: 7 maj 2014
- *      Author: Erik
  */
 
 #ifndef PHYSICSUPDATER_HPP_

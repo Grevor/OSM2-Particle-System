@@ -1,5 +1,6 @@
+#This will only work under cygwin
 standard:
-	g++ -std=c++11 -lrt -Wall -ggdb -o standard.exe main.cpp
+	g++ -std=c++11 -Wall -ggdb -o standard.exe main.cpp
 	
 standardgl:
 	g++ -std=c++11 -Wall -ggdb -DGLFW_STATIC -o standardGL.exe standardGL.cpp ../ParticleEngine.cpp -lglfw3 -lgdi32 -lglu32 -lopengl32 -lboost_thread-mt

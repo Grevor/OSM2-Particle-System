@@ -2,7 +2,6 @@
  * standardGL.cpp
  *
  *  Created on: 8 maj 2014
- *      Author: Erik
  */
 
 #ifdef _WIN32
@@ -17,13 +16,13 @@
 #include <Eigen/Eigen>
 //#include "StandardTimer.hpp"
 #include "../../test/StringBitmap.hpp"
-#include "../MultiInitializer.h"
-#include "../MultiUpdater.h"
-#include "../MultiReaper.h"
-#include "../Curve.h"
-#include "../ConstantCurve.h"
-#include "../ParticleSystem.h"
-#include "../NaiveParticlePool.h"
+#include "../utilities/MultiInitializer.h"
+#include "../utilities/MultiUpdater.h"
+#include "../utilities/MultiReaper.h"
+#include "../curves/Curve.h"
+#include "../curves/ConstantCurve.h"
+#include "../ParticleSystem.hpp"
+#include "../NaiveParticlePool.hpp"
 #include "ASCIIRenderer.hpp"
 #include "EmitterInitializer.hpp"
 #include "EmitterWithinSphere.hpp"
@@ -37,7 +36,7 @@
 #include "LifetimeInitializer.hpp"
 #include "ReaperUpdater.hpp"
 #include "LifetimeReaper.hpp"
-#include "../core/ZeroInitializer.hpp"
+#include "../utilities/ZeroInitializer.hpp"
 #include "LifetimeColorUpdater.hpp"
 #include "ExplosionVelocityInitializer.hpp"
 #include "SizeInitializer.hpp"
@@ -45,7 +44,7 @@
 //#include "AlphaFadeUpdater.hpp"
 #include "StandardGLRenderer.hpp"
 
-#include "../ParticleEngine.h"
+#include "../ParticleEngine.hpp"
 #define FPS 30
 #define Width 1336
 #define Height 768

@@ -2,7 +2,6 @@
  * StandardParticleRenderer.cpp
  *
  *  Created on: 12 maj 2014
- *      Author: David
  */
 
 #include <GL/glew.h>

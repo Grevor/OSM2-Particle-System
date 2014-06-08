@@ -2,7 +2,6 @@
  * Initializer.hpp
  *
  *  Created on: 12 maj 2014
- *      Author: Erik
  */
 
 #ifndef INITIALIZER_HPP_

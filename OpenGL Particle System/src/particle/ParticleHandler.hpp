@@ -2,7 +2,6 @@
  * GLParticleInitializer.hpp
  *
  *  Created on: 16 maj 2014
- *      Author: Erik
  */
 
 #ifndef PARTICLEHANDLER_HPP_

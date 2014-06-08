@@ -2,7 +2,6 @@
  * ExplosionVelocityInitializer.hpp
  *
  *  Created on: 7 maj 2014
- *      Author: Erik
  */
 
 #ifndef EXPLOSIONVELOCITYINITIALIZER_HPP_

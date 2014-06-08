@@ -2,7 +2,6 @@
  * Updaters.hpp
  *
  *  Created on: 16 maj 2014
- *      Author: Erik
  */
 
 #ifndef UPDATERS_HPP_

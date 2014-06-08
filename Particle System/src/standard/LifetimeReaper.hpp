@@ -2,13 +2,12 @@
  * LifetimeReaper.hpp
  *
  *  Created on: 5 maj 2014
- *      Author: Erik
  */
 
 #ifndef LIFETIMEREAPER_HPP_
 #define LIFETIMEREAPER_HPP_
 
-#include "../Reaper.h"
+#include "../utilities/Reaper.h"
 
 /**
  * Class defining a very standard reaper which is enacted when a standard-particle is found to have exceeded its lifetime.

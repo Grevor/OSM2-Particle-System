@@ -2,7 +2,6 @@
  * ColorUpdater.hpp
  *
  *  Created on: 6 maj 2014
- *      Author: Erik
  */
 
 #ifndef COLORUPDATER_HPP_

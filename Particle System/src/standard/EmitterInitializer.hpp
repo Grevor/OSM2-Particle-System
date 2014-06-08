@@ -2,12 +2,11 @@
  * EmitterInitializer.hpp
  *
  *  Created on: 7 maj 2014
- *      Author: Erik
  */
 
 #ifndef EMITTERINITIALIZER_HPP_
 #define EMITTERINITIALIZER_HPP_
-#include "../core/Emitter.h"
+#include "../utilities/Emitter.h"
 #include "StandardParticle.hpp"
 #include "../ParticleInitializer.h"
 

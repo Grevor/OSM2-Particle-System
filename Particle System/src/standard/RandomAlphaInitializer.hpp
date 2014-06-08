@@ -2,7 +2,6 @@
  * RandomAlphaInitializer.hpp
  *
  *  Created on: 5 maj 2014
- *      Author: Erik
  */
 
 #ifndef RANDOMALPHAINITIALIZER_HPP_
