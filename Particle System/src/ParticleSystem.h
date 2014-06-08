@@ -2,7 +2,6 @@
  * ParticleSystem.h
  *
  *  Created on: 16 apr 2014
- *      Author: David
  */
 
 #ifndef PARTICLESYSTEM_H_
@@ -43,6 +42,14 @@ class ParticleSystem : public IterationUpdateable {
 	bool deletePool, alive;
 
 public:
+	/**
+	 * Creates a new ParticleSystem with the specified components.
+	 * @param pool The pool to use in this particle system.
+	 * @param init The initializer to use in this particle system.
+	 * @param updater The updater to use in this particle system.
+	 * @param spawnCurve The spawn curve to use in this particle system.
+	 * @param deletePoolWhenDone Boolean denoting whether the particle pool is to be deleted when deleting the particle system.
+	 */
 	ParticleSystem(ParticlePool<Particle>* pool, ParticleInitializer<Particle>* init,
 			ParticleUpdater<Particle>* updater, Curve<long,long>* spawnCurve, bool deletePoolWhenDone) {
 		assert(pool != NULL);
@@ -62,6 +69,13 @@ public:
 		this->reset();
 	}
 
+	/**
+	 *
+	 * @param poolSize The size of the particle pool used in this particle system.
+	 * @param init The initializer to use in this particle system.
+	 * @param updater The updater to use in this particle system.
+	 * @param spawnCurve The spawn curve to use in this particle system.
+	 */
 	ParticleSystem(int poolSize, ParticleInitializer<Particle>* init,
 			ParticleUpdater<Particle>* updater, Curve<long,long>* spawnCurve) :
 				ParticleSystem(new NaiveParticlePool<Particle>(poolSize), init, updater, spawnCurve, true) {}
@@ -72,14 +86,15 @@ public:
 
 	/**
 	 * Gets the maximum number of particles that this particle system can hold.
-	 * @return Maximum number of particles.
+	 * @return Maximum number of particles this system can hold.
 	 */
 	int getMaxSize() {
 		return pool->size();
 	}
 
 	/**
-	 * Resets this ParticleSystem to its starting state. Useful for reuse of ParticleSystem:s
+	 * Resets this ParticleSystem to its starting state. Useful for reuse of ParticleSystems.
+	 * May NOT be called while the particle system is being updated.
 	 */
 	void reset() {
 		this->currentStep = 0;
@@ -93,8 +108,10 @@ public:
 	}
 
 	/**
-	 * Updates this particle system, making it progress to its next iteration if all
+	 * Updates this particle system, making it progress to its next iteration after all
 	 * updating from the previous frame has been completed.
+	 *
+	 * Note that this is a blocking call.
 	 */
 	void step() override {
 		while(true) {
@@ -109,6 +126,12 @@ public:
 		}
 	}
 
+	/**
+	 * Checks if the current step is complete or not.
+	 * Please note that this function may miss the updating and/or creation of up to n - 1 particles,
+	 * where n is the number of threads updating the system.
+	 * @return True if the step is complete, else false.
+	 */
 	bool isStepComplete() override {
 		return isDoneWithIteration(currentStep);
 	}
@@ -212,6 +235,8 @@ private:
 
 	/**
 	 * Checks if the specified iteration is done.
+	 * This function may currently miss up to n - 1 particles,
+	 * where n is the number of threads updating the system.
 	 * @param step The iteration to check.
 	 * @return
 	 * True if the specified iteration is done, else false.
@@ -244,7 +269,6 @@ private:
 					updateIterator->done(particleToUpdate);
 				}
 			}
-			//return;
 		}
 	}
 
