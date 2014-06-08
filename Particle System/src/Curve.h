@@ -1,15 +1,11 @@
-/*
- * Curve.h
- *
- *  Created on: 24 apr 2014
- *      Author: Erik
- */
-
 #ifndef CURVE_H_
 #define CURVE_H_
 
 namespace Curves {
 
+/**
+ * A Curve should be seen as a graph which takes x-values and outputs y-values.
+ */
 template<typename Domain, typename Range>
 class Curve {
 public:
